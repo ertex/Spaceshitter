@@ -8,8 +8,9 @@ public class Entity extends Sprite {
     protected int speed;
     protected boolean moveable, collideable;
     protected Rectangle rect;
+    private int identifier;//this is bound to the entity that sent the locationData, it is ment to remove confusion around what entity sent it.
 
-    public Entity(double x, double y, int width, int height, BufferedImage img, boolean collideable) { //Static Entity
+    public Entity(int identifier,double x, double y, int width, int height, BufferedImage img, boolean collideable) { //Static Entity
         super(x, y, width, height, img);
         this.moveable = false;
         this.collideable = collideable;
@@ -19,7 +20,7 @@ public class Entity extends Sprite {
         }
     }
 
-    public Entity(double x, double y, int width, int height, int speed, BufferedImage img, boolean moveable, boolean collideable) {//controllable Entity
+    public Entity(int identifier,double x, double y, int width, int height, int speed, BufferedImage img, boolean moveable, boolean collideable) {//controllable Entity
         super(x, y, width, height, img);
         this.moveable = moveable;
         this.collideable = collideable;
@@ -29,7 +30,7 @@ public class Entity extends Sprite {
         }
     }
 
-    public Entity(double x, double y, int width, int height, BufferedImage img) {//Projectile entity
+    public Entity(int identifier,double x, double y, int width, int height, BufferedImage img) {//Projectile entity
         super(x, y, width, height, img);
         this.moveable = true;
         this.collideable = true;
@@ -60,6 +61,10 @@ public class Entity extends Sprite {
         super.y += y;
         rect.setLocation((int) x, (int) y);
         }
+    }
+    
+    public LocationData getLocationData(){
+    return new LocationData(identifier,super.x,super.y);
     }
 
 }

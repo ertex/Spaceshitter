@@ -14,8 +14,11 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class Program extends JFrame implements ActionListener, KeyListener, Runnable {
+public class Program extends JFrame implements KeyListener, Runnable {
 
+    
+    public static byte lastByteRecived;
+    public static double lastDoubleRecived;
     Canvas canvas;
     private BufferStrategy bs;
     Graphics g;
@@ -23,15 +26,19 @@ public class Program extends JFrame implements ActionListener, KeyListener, Runn
     private SpaceShip LocalPlayer;
     private ArrayList<Sprite> drawables;
     private Thread t;
+    private boolean foobar = false;
+    private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
+    private NetworkHandler networkHandler = new NetworkHandler(actionHandler); //creates the Networkhandler to be able to send messages to remote
 
     public Program() { //Doubles as a Init() since it's called from the main class on startup
-        addKeyListener(this);
+        
         t = new Thread(this, "Main");
         xSize = 600;
         ySize = 600;
         createAndShowGUI();
         drawables = new ArrayList();
-        LocalPlayer = new SpaceShip(20, 20, 50, 50, 20, null, true); //Creates the Locxal player, this will be controlled by keystorkes from the local machine
+        //FIX------- Identification nimber for sapceship
+        LocalPlayer = new SpaceShip(1,20, 20, 50, 50, 20, null, true); //Creates the Locxal player, this will be controlled by keystorkes from the local machine
         drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
         paintComponents();
         
@@ -61,6 +68,9 @@ public class Program extends JFrame implements ActionListener, KeyListener, Runn
     public void paintComponents() {
         g = (Graphics2D) bs.getDrawGraphics();
         g.clearRect(0, 0, xSize, ySize); //clears the canvas
+        if(foobar){
+        g.fillRect(20,20,50,50);
+                }
         for (Sprite o : drawables) {//draws all the drawable things
             o.draw(g);
         }
@@ -70,21 +80,17 @@ public class Program extends JFrame implements ActionListener, KeyListener, Runn
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-            System.out.println("This is a debug message7");
-
-    }
-
-    @Override
     public void keyTyped(KeyEvent e) {
-       System.out.println("This is a debug message3");
+
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println("This is a debug message1");
+    
+        foobar = true;
+        
         if (e.getKeyCode() == KeyEvent.VK_Q) {
-            System.out.println("This is a debug message");
+            System.out.println("You pressed Q");
             LocalPlayer.shoot();
             drawables.addAll(LocalPlayer.fetchProjectileBuffer());
             LocalPlayer.clearProjectileBuffer();
@@ -95,7 +101,7 @@ public class Program extends JFrame implements ActionListener, KeyListener, Runn
 
     @Override
     public void keyReleased(KeyEvent e) {
-        System.out.println("This is a debug message2");
+     
     }
 
     @Override
@@ -111,4 +117,27 @@ public class Program extends JFrame implements ActionListener, KeyListener, Runn
 
         }
     }
+    
+     private class ActionHandler implements ActionListener//this listens if a action is performed and exceutes the linked action 
+    {
+
+        public void actionPerformed(ActionEvent e) {
+
+            try {
+
+                String cmd = e.getActionCommand();
+                switch (cmd) {
+
+
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            //   }
+        }
+    }
+
 }
+    
+
