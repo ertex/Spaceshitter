@@ -16,9 +16,10 @@ import javax.swing.JPanel;
 
 public class Program extends JFrame implements KeyListener, Runnable {
 
-    
     public static byte lastByteRecived;
     public static double lastDoubleRecived;
+    public static ArrayList<LocationData> lastLocationsRecived;
+    public static int nextIdentifier;
     Canvas canvas;
     private BufferStrategy bs;
     Graphics g;
@@ -31,17 +32,18 @@ public class Program extends JFrame implements KeyListener, Runnable {
     private NetworkHandler networkHandler = new NetworkHandler(actionHandler); //creates the Networkhandler to be able to send messages to remote
 
     public Program() { //Doubles as a Init() since it's called from the main class on startup
-        
+
         t = new Thread(this, "Main");
         xSize = 600;
         ySize = 600;
         createAndShowGUI();
         drawables = new ArrayList();
         //FIX------- Identification nimber for sapceship
-        LocalPlayer = new SpaceShip(1,20, 20, 50, 50, 20, null, true); //Creates the Locxal player, this will be controlled by keystorkes from the local machine
+        LocalPlayer = new SpaceShip(1, 20, 20, 50, 50, 20, null, true); //Creates the Locxal player, this will be controlled by keystorkes from the local machine
         drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
+
         paintComponents();
-        
+
         t.start();
     }
 
@@ -58,7 +60,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
         canvas.setBackground(Color.red);
 
         frame.add(canvas);
-
+        canvas.addKeyListener(this); //Adds the keylistner to the canvas, without code keylistner won't work
         canvas.createBufferStrategy(2);//creates doublebuffering in canvas object
         bs = canvas.getBufferStrategy();
 
@@ -68,14 +70,31 @@ public class Program extends JFrame implements KeyListener, Runnable {
     public void paintComponents() {
         g = (Graphics2D) bs.getDrawGraphics();
         g.clearRect(0, 0, xSize, ySize); //clears the canvas
-        if(foobar){
-        g.fillRect(20,20,50,50);
-                }
+        if (foobar) {
+            g.fillRect(20, 20, 50, 50);
+        }
         for (Sprite o : drawables) {//draws all the drawable things
             o.draw(g);
         }
         if (!bs.contentsLost()) {
             bs.show();
+        }
+    }
+
+    public void updateLocations(ArrayList inNewLocations, ArrayList inOldLocations) {//Updates the location of sprites, FIND BETTER NAMES FOR THESE
+
+        ArrayList<LocationData> newLocations = inNewLocations;
+        ArrayList<Sprite> oldLocations = inOldLocations;
+
+        for (LocationData o : newLocations) {
+            int ident = o.getIdentifier();
+
+            for (Sprite u : oldLocations) {
+                if (u.getIdentification() == ident) { //Checks to see if the identifier of the location data is the same as the identifier of the sprite
+                    u.setLocation(o); //updates the location of the sprites
+                    oldLocations.remove(o); //removes a object from the locations so it wont be itterated though again.
+                }
+            }
         }
     }
 
@@ -86,13 +105,10 @@ public class Program extends JFrame implements KeyListener, Runnable {
 
     @Override
     public void keyPressed(KeyEvent e) {
-    
-        foobar = true;
-        
+
         if (e.getKeyCode() == KeyEvent.VK_Q) {
-            System.out.println("You pressed Q");
             LocalPlayer.shoot();
-            drawables.addAll(LocalPlayer.fetchProjectileBuffer());
+            drawables.addAll(LocalPlayer.fetchProjectileBuffer());//Is this really the best way to do this? is there a better way?
             LocalPlayer.clearProjectileBuffer();
 
         }
@@ -101,24 +117,27 @@ public class Program extends JFrame implements KeyListener, Runnable {
 
     @Override
     public void keyReleased(KeyEvent e) {
-     
     }
 
     @Override
     public void run() {
         while (true) {
+            if (networkHandler.connected()) {
+                updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables
+            }
             paintComponents();
-          //  System.out.println("running");
+            //  System.out.println("running");
             try {
 
                 Thread.sleep(30);
+
             } catch (InterruptedException io) {
             }
 
         }
     }
-    
-     private class ActionHandler implements ActionListener//this listens if a action is performed and exceutes the linked action 
+
+    private class ActionHandler implements ActionListener//this listens if a action is performed and exceutes the linked action 
     {
 
         public void actionPerformed(ActionEvent e) {
@@ -127,7 +146,6 @@ public class Program extends JFrame implements KeyListener, Runnable {
 
                 String cmd = e.getActionCommand();
                 switch (cmd) {
-
 
                 }
             } catch (Exception ex) {
@@ -139,5 +157,3 @@ public class Program extends JFrame implements KeyListener, Runnable {
     }
 
 }
-    
-

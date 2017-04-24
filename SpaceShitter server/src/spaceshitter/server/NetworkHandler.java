@@ -1,4 +1,4 @@
-package space.shitter;
+package spaceshitter.server;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -15,9 +15,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import java.util.ArrayList;
 
-public class NetworkHandler implements Runnable {
+public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
     ServerSocket serverSocket;
     Socket socket;
@@ -81,6 +80,7 @@ public class NetworkHandler implements Runnable {
         output = new ObjectOutputStream(socket.getOutputStream());
         output.flush();
         input = new ObjectInputStream(socket.getInputStream());
+        
 
     }
 
@@ -92,32 +92,22 @@ public class NetworkHandler implements Runnable {
     }
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
-        Object message = null;
-        sendByteMessage((byte) 0);//sends a 0 in confirmation that it is connected
+      Object message = null;
+        sendByteMessage((byte)0);//sends a 0 in confirmation that it is connected
 
         do {
             try {
-                System.out.println("got a message!");
-                message = input.readObject();
-                if (message.getClass() == byte.class) {
-
-                    Program.lastByteRecived = (byte) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-                } else if (message.getClass() == double.class) {
-                    Program.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-
-                }  else if (message.getClass() == int.class) {
-                    
-                    Program.nextIdentifier = (int)message;
                 
-                }else if (message.getClass() == ArrayList.class) { //Checks to see if the recived message is a arraylist
-                    System.out.println("got an array! woo!");
-                    ArrayList array = (ArrayList) message;
-                    if (array.get(0).getClass()  == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
-                        Program.lastLocationsRecived = array;
-                        
-                    }
+              message =  input.readObject(); 
+                if(message.getClass() == byte.class){
+                 
+                SpaceShitterServer.lastByteRecived = (byte)message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                 }
+                else if(message.getClass()==double.class){
+                SpaceShitterServer.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
+                }
+       
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
@@ -141,7 +131,7 @@ public class NetworkHandler implements Runnable {
     }
 
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
-
+        
         output.close();
         input.close();
         socket.close();
@@ -159,9 +149,9 @@ public class NetworkHandler implements Runnable {
         }
 
     }
-
-    public void sendDoubleMessage(double message) { //sends a double message to remote 
-        //the reson why it's a sepparate method from send byte is to not put such a heavy load on the network by sending shorter messages when possible
+    
+       public void sendDoubleMessage(double message) { //sends a double message to remote 
+       //the reson why it's a sepparate method from send byte is to not put such a heavy load on the network by sending shorter messages when possible
 
         try {
             output.writeObject(message);
@@ -173,18 +163,6 @@ public class NetworkHandler implements Runnable {
 
     }
 
-    public void connectToServer() throws IOException {//tries to send a connection to another client
-
-        System.out.println("Connecting to ..." + ipFeild.getText() + " : " + portFeild.getText());
-        try {
-            socket = new Socket(InetAddress.getByName(ipFeild.getText()), Integer.parseInt(portFeild.getText()));
-            socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
-            System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
-        } catch (java.net.UnknownHostException e) {
-            System.out.println("Unknown adress");
-
-        }
-    }
 
     public void createGUI(ActionListener actionHandler) {
 
