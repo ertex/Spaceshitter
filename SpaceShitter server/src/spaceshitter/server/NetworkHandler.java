@@ -93,7 +93,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
       Object message = null;
-        sendByteMessage((byte)0);//sends a 0 in confirmation that it is connected
+        sendMessage((byte)0);//sends a 0 in confirmation that it is connected
 
         do {
             try {
@@ -124,7 +124,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
                 //this solotion is horrible, if I forget to ask you how to do this in  different way, take contact
                 pingTime = (int) (pingRecived - pingSent);//this calculates the ping by taking the diference in time between reciving and sending a message
                 //this means it lags behind by one tick, but that is close enogh
-                sendByteMessage((byte) 0);//sends the ping
+                sendMessage((byte) 0);//sends the ping
                 pingSent = System.currentTimeMillis(); //saves the time it was sent
             }
         }
@@ -138,20 +138,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         socket = null;
     }
 
-    public void sendByteMessage(Byte message) { //sends a byte message to remote, a shorte less demanding message
-
-        try {
-            output.writeObject(message);
-            output.flush();
-        } catch (IOException e) {
-            System.out.println("Could not send that message");
-
-        }
-
-    }
-    
-       public void sendDoubleMessage(double message) { //sends a double message to remote 
-       //the reson why it's a sepparate method from send byte is to not put such a heavy load on the network by sending shorter messages when possible
+    public void sendMessage(Object message) { //sends a byte message to remote, a shorte less demanding message
 
         try {
             output.writeObject(message);
