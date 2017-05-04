@@ -37,6 +37,10 @@ public class Entity extends Sprite {
         rect = new Rectangle((int) x, (int) y, width, height);
 
     }
+    
+    public void update(){
+    
+    }
 
     public Rectangle getRect() {
         if (rect != null) {
@@ -61,6 +65,7 @@ public class Entity extends Sprite {
         rect.setLocation((int) x, (int) y);
         }
     }
+    
     
 
 
