@@ -95,7 +95,7 @@ public class NetworkHandler implements Runnable {
         Object message = null;
         sendByteMessage((byte) 0);//sends a 0 in confirmation that it is connected
 
-        do {
+        do { //Main loop of networkhandler
             try {
                 System.out.println("got a message!");
                 message = input.readObject();
@@ -105,17 +105,19 @@ public class NetworkHandler implements Runnable {
                 } else if (message.getClass() == double.class) {
                     Program.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
-                }  else if (message.getClass() == int.class) {
-                    
-                    Program.nextIdentifier = (int)message;
-                
-                }else if (message.getClass() == ArrayList.class) { //Checks to see if the recived message is a arraylist
+                } else if (message.getClass() == int.class) {
+
+                    Program.nextIdentifier = (int) message;
+
+                } else if (message.getClass() == ArrayList.class) { //Checks to see if the recived message is a arraylist
                     System.out.println("got an array! woo!");
                     ArrayList array = (ArrayList) message;
-                    if (array.get(0).getClass()  == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
+                    if (array.get(0).getClass() == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
                         Program.lastLocationsRecived = array;
-                        
+
                     }
+                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+                    Program.lastSpriteRecived = (Sprite) message;
                 }
 
             } catch (ClassNotFoundException n) {
@@ -146,6 +148,26 @@ public class NetworkHandler implements Runnable {
         input.close();
         socket.close();
         socket = null;
+    }
+
+    public void sendGetRequest(int identifier) { //Sends a request to retreive a Object with the inputed id
+        try {
+            output.writeObject(identifier);
+            output.flush();
+        } catch (IOException e) {
+            System.out.println("Could not send that message");
+
+        }
+    }
+
+    public void sendObjectMessage(Object message) {
+        try {
+            output.writeObject(message);
+            output.flush();
+        } catch (IOException e) {
+            System.out.println("Could not send that message");
+
+        }
     }
 
     public void sendByteMessage(Byte message) { //sends a byte message to remote, a shorte less demanding message

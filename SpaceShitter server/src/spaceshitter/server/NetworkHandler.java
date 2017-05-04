@@ -106,6 +106,9 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
                 else if(message.getClass()==double.class){
                 SpaceShitterServer.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
+                
+                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+                    SpaceShitterServer.lastSpriteRecived = (Sprite)message;
                 }
        
             } catch (ClassNotFoundException n) {

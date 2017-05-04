@@ -20,6 +20,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
     public static byte lastByteRecived;
     public static double lastDoubleRecived;
+    public static Sprite lastSpriteRecived;
     private Canvas canvas;
     private final int xSize = 400;
     private final int ySize = 400;
@@ -75,7 +76,11 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                 if (o.getClass() == Entity.class) {
                     ((Entity) o).update();
                 }
+                if (o.getClass() == Projectile.class) {
+                    ((Projectile) o).update();
+                }
             }
+            
         }
     }
 

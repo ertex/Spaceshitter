@@ -20,6 +20,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
     public static double lastDoubleRecived;
     public static ArrayList<LocationData> lastLocationsRecived;
     public static int nextIdentifier;
+    public static Sprite lastSpriteRecived; 
     Canvas canvas;
     private BufferStrategy bs;
     Graphics g;
