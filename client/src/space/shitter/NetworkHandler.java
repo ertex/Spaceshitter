@@ -57,7 +57,7 @@ public class NetworkHandler implements Runnable {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
                 try {
-                    waitForConnect();
+                    connectToServer();
                 } catch (IOException e) {
 
                 }
@@ -84,12 +84,6 @@ public class NetworkHandler implements Runnable {
 
     }
 
-    public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
-        System.out.println("Waiting for sombody to connect...");
-        serverSocket.setSoTimeout(1000);
-        socket = serverSocket.accept();
-
-    }
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
         Object message = null;
@@ -197,13 +191,13 @@ public class NetworkHandler implements Runnable {
 
     public void connectToServer() throws IOException {//tries to send a connection to another client
 
-        System.out.println("Connecting to ..." + ipFeild.getText() + " : " + portFeild.getText());
+        System.out.println("Connecting ...");
         try {
-            socket = new Socket(InetAddress.getByName(ipFeild.getText()), Integer.parseInt(portFeild.getText()));
+            socket = new Socket(InetAddress.getByName("192.1.1.98"), 25565);
             socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
             System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
         } catch (java.net.UnknownHostException e) {
-            System.out.println("Unknown adress");
+            System.out.println("conection failed");
 
         }
     }

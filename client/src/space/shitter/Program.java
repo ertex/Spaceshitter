@@ -20,7 +20,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
     public static double lastDoubleRecived;
     public static ArrayList<LocationData> lastLocationsRecived;
     public static int nextIdentifier;
-    public static Sprite lastSpriteRecived; 
+    public static Sprite lastSpriteRecived;
     Canvas canvas;
     private BufferStrategy bs;
     Graphics g;
@@ -94,8 +94,15 @@ public class Program extends JFrame implements KeyListener, Runnable {
                 if (u.getIdentification() == ident) { //Checks to see if the identifier of the location data is the same as the identifier of the sprite
                     u.setLocation(o); //updates the location of the sprites
                     oldLocations.remove(o); //removes a object from the locations so it wont be itterated though again.
+                    break;
                 }
             }
+
+        }
+        if (oldLocations.size() > 0) {
+            networkHandler.sendGetRequest(oldLocations.get(0).getIdentification()); //This should not really (naming convention and all) be here but it makes it simpler to code
+            //Finds a missing Sprite7entity and sends off a request to fetch it from the server
+            oldLocations.remove(0);
         }
     }
 
@@ -123,8 +130,14 @@ public class Program extends JFrame implements KeyListener, Runnable {
     @Override
     public void run() {
         while (true) {
-            if (networkHandler.connected()) {
-                updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables
+            if(lastSpriteRecived != null){
+            drawables.add(lastSpriteRecived);
+            lastSpriteRecived = null;
+            }
+            
+            if (networkHandler.connected() & lastLocationsRecived != null) {
+                updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables and also sends a request to the remote server to send it to client
+                lastLocationsRecived = null;
             }
             paintComponents();
             //  System.out.println("running");

@@ -87,7 +87,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
         System.out.println("Waiting for sombody to connect...");
         serverSocket.setSoTimeout(1000);
-        socket = serverSocket.accept();
+        socket = serverSocket.accept();//CREATE AN ARRAYLIST HERE !!!!
 
     }
 
