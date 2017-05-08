@@ -11,6 +11,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,9 +20,10 @@ import javax.swing.JTextField;
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
     ServerSocket serverSocket;
-    Socket socket;
-    ObjectOutputStream output;
-    ObjectInputStream input;
+    private ArrayList<Socket> connections = new ArrayList();
+    private ArrayList<ObjectOutputStream> outputs = new ArrayList();
+    private ArrayList<ObjectInputStream> inputs = new ArrayList();
+    // ObjectOutputStream output;
 
     private JTextField ipFeild, portFeild, openPortFeild;
     private JLabel localIp, localPort;
@@ -35,12 +37,15 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private long pingSent, pingRecived; //this is used to get the ping to remote
     private int pingTime; //the current pingTime
     private int foobar = 0;//This is used in pingRemote, you might want to look the other way?
+    private ConnectionHandler connectionHandler;
 
     public NetworkHandler(ActionListener actionHandler) {
         running = true;
         connected = false; //wether or not local is connected to remote
         port = 33678; //the port that will be used to connect to the server
+        connectionHandler = new ConnectionHandler();
         t = new Thread(this, "NetworkHandler");
+
         createGUI(actionHandler);
         t.start();//also calls for the run
     }
@@ -54,16 +59,14 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         }
         while (running) {
 
-            if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
-                try {
-                    waitForConnect();
-                } catch (IOException e) {
+            if (connections.size() != connectionHandler.getNumberOfConnections()) {
+                //ADD OVERRIDE ARRAYLIST STUFF--------------------------------------------------
+            }
 
-                }
-            } else {
+            if (connections.size() > 0) { //checks if there is a estblished connection, if not: check for incoming connections
 
                 try {
-                    setupStreams(); //creates the sockets and connects them
+
                     whileConnected();//The program stays here as long as the progrm is running
                     closeStreams(); //closes all the sokets nice and easy so nothing breaks
                 } catch (IOException ex) {
@@ -75,42 +78,37 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     }
 
-    public void setupStreams() throws IOException {//creates the streams 
-        connected = true;
-        output = new ObjectOutputStream(socket.getOutputStream());
-        output.flush();
-        input = new ObjectInputStream(socket.getInputStream());
-        
-
-    }
-
-    public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
-        System.out.println("Waiting for sombody to connect...");
-        serverSocket.setSoTimeout(1000);
-        socket = serverSocket.accept();//CREATE AN ARRAYLIST HERE !!!!
-
-    }
-
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
-      Object message = null;
-        sendMessage((byte)0);//sends a 0 in confirmation that it is connected
+        Object message = null;
+        sendMessage((byte) 0);//sends a 0 in confirmation that it is connected
 
         do {
-            try {
-                
-              message =  input.readObject(); 
-                if(message.getClass() == byte.class){
-                 
-                SpaceShitterServer.lastByteRecived = (byte)message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-                }
-                else if(message.getClass()==double.class){
-                SpaceShitterServer.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
-                
-                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-                    SpaceShitterServer.lastSpriteRecived = (Sprite)message;
+            try {
+                if (message == null) {//Makes sure it does not overwrite anything
+                    message = null; //removes some nasty nullpointers when there are no connections
+                    for (ObjectInputStream i : inputs) {
+                        message = i.readObject();
+                        if (message != null) {
+                            break;
+                        }
+                    }
+                    if (message != null) {
+                        if (message.getClass() == byte.class & SpaceShitterServer.lastByteRecived == 0) {
+
+                            SpaceShitterServer.lastByteRecived = (byte) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+
+                        } else if (message.getClass() == double.class & SpaceShitterServer.lastDoubleRecived == 0) {
+                            SpaceShitterServer.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+
+                        } else if (message instanceof Sprite & SpaceShitterServer.lastSpriteRecived == null) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+                            SpaceShitterServer.lastSpriteRecived = (Sprite) message;
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        }
+                    }
                 }
-       
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
@@ -134,25 +132,36 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     }
 
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
-        
-        output.close();
-        input.close();
-        socket.close();
-        socket = null;
+
+        for (ObjectOutputStream o : outputs) {
+            o.close();
+
+        }
+        for (ObjectInputStream i : inputs) {
+            i.close();
+        }
+
+        for (Socket c : connections) {
+            c.close();
+            c = null;
+        }
     }
 
     public void sendMessage(Object message) { //sends a byte message to remote, a shorte less demanding message
 
         try {
-            output.writeObject(message);
-            output.flush();
+            for (ObjectOutputStream o : outputs) {
+                o.writeObject(message);
+                o.flush();
+
+            }
+
         } catch (IOException e) {
             System.out.println("Could not send that message");
 
         }
 
     }
-
 
     public void createGUI(ActionListener actionHandler) {
 
