@@ -32,6 +32,7 @@ public class NetworkHandler implements Runnable {
     private JButton connectButton;
     private Thread t;
     private boolean running, connected;
+    private String ip;
 
     private long pingSent, pingRecived; //this is used to get the ping to remote
     private int pingTime; //the current pingTime
@@ -41,6 +42,7 @@ public class NetworkHandler implements Runnable {
         running = true;
         connected = false; //wether or not local is connected to remote
         port = 33678; //the port that will be used to connect to the server
+        ip = "localhost";
         t = new Thread(this, "NetworkHandler");
         createGUI(actionHandler);
         t.start();//also calls for the run
@@ -48,18 +50,14 @@ public class NetworkHandler implements Runnable {
 
     public void run() { //This is the core of the network, it makes sure that everything is executed in the right order
 
-        try {
-            serverSocket = new ServerSocket(port, 100); //creates the server socket that the remote will connect to
-        } catch (IOException ex) {
 
-        }
         while (running) {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
                 try {
                     connectToServer();
                 } catch (IOException e) {
-
+                    System.out.println("Connection rejected");
                 }
             } else {
 
@@ -83,7 +81,6 @@ public class NetworkHandler implements Runnable {
         input = new ObjectInputStream(socket.getInputStream());
 
     }
-
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
         Object message = null;
@@ -193,7 +190,7 @@ public class NetworkHandler implements Runnable {
 
         System.out.println("Connecting ...");
         try {
-            socket = new Socket(InetAddress.getByName("192.1.1.98"), 25565);
+            socket = new Socket(InetAddress.getByName(ip), 25565);
             socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
             System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
         } catch (java.net.UnknownHostException e) {

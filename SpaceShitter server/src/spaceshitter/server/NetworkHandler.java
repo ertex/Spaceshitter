@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
-    ServerSocket serverSocket;
+   private ServerSocket serverSocket;
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
@@ -44,6 +44,12 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         connected = false; //wether or not local is connected to remote
         port = 33678; //the port that will be used to connect to the server
         t = new Thread(this, "NetworkHandler");
+        
+                try {
+            serverSocket = new ServerSocket(port,100); //creates the server socket that the remote will connect to
+        } catch (IOException ex) {
+System.out.println("server socket failed to construct");
+        }
 
         createGUI(actionHandler);
         t.start();//also calls for the run
@@ -51,11 +57,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     public void run() { //This is the core of the network, it makes sure that everything is executed in the right order
 
-        try {
-            serverSocket = new ServerSocket(port, 100); //creates the server socket that the remote will connect to
-        } catch (IOException ex) {
-System.out.println("server socket failed to construct");
-        }
+
         while (running) {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
