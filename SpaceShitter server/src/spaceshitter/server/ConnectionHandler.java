@@ -42,12 +42,7 @@ public class ConnectionHandler implements Runnable {
         inputs.add(new ObjectInputStream(socket.getInputStream()));
     }
 
-    public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
-        System.out.println("Waiting for sombody to connect...");
-        serverSocket.setSoTimeout(1000);
-        addConnection(serverSocket.accept());
-
-    }
+ 
 
     public int getNumberOfConnections() {
         return connections.size();

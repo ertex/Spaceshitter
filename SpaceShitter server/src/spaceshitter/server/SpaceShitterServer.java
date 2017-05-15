@@ -29,7 +29,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     JFrame frame;
     JPanel outputPanel;
     private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
-    NetworkHandler networkHandler;
+    private ArrayList<NetworkHandler> networkHandlers = new ArrayList();
 
     public static void main(String[] args) {
 
@@ -39,8 +39,8 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     }
 
     public SpaceShitterServer() {
-        networkHandler = new NetworkHandler(actionHandler);
-        drawables = new ArrayList();
+        networkHandlers.add(new NetworkHandler(actionHandler)); //creates a networkhandler that you can connect to
+        drawables = new ArrayList(); //This arraylist contains almost everything that is of importance and will be able to be drawn
         drawables.add(new Sprite(1, (double) 345, (double) 234, 54, 54, null));
         createAndShowGUI();
         output("asdasd");
@@ -51,11 +51,15 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     public void run() {
         System.out.println("entered run()");
         while (true) {
+            
+            if(networkHandlers.get(networkHandlers.size()).connected() ==true  ){//Gets the last network handler and checks if somebody is connected to it, 
+              networkHandlers.add(new NetworkHandler(actionHandler)); //If someody is connected a new networkhandler is created so more connectins can be accepted
+            }
 
             //This is the main loop for checking if something is hit by a projectile
             if (drawables.size() > 0) { //Prevents it from calling null items
                 for (Sprite o : drawables) {
-                    System.out.println("o7");
+
 
                     System.out.println("Hey, it didn't crash");
                     if (o.getClass() == Projectile.class) { //Finds the first Projectile that will be matched up with a entity
@@ -99,7 +103,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         outputPanel.setLayout(new BoxLayout(outputPanel, BoxLayout.Y_AXIS));
         outputPanel.setAlignmentX(LEFT_ALIGNMENT);
 
-        frame.add(networkHandler.getNetworkPanel());
+       
         frame.add(outputPanel);
 
         System.out.println("GUI created");
