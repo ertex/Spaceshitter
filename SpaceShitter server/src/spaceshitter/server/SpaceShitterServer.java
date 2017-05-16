@@ -1,8 +1,6 @@
 package spaceshitter.server;
 
 //Author David Johansson Te2
-import com.mysql.jdbc.Connection;
-import com.mysql.jdbc.Statement;
 import java.awt.Canvas;
 import java.awt.Color;
 import static java.awt.Component.LEFT_ALIGNMENT;
@@ -11,8 +9,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -34,19 +34,19 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     JPanel outputPanel;
     private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
     private ArrayList<NetworkHandler> networkHandlers = new ArrayList();
-    
+
     private Connection con;
     private Statement st;
     private ResultSet rs;
-
+     private String tableName;
+     private String tableDataID;
+    private String tableNameID;
 
     private String driver = "org.apache.derby.jdbc.ClientDriver";
     private String url = "jbdc:derby://localhost:1527/SpaceShitterDB";
-    private String username  = "root";
+    private String username = "root";
     private String password = "";
-    
-    
-    
+
     public static void main(String[] args) {
 
         System.out.println("SpaceShitterServer started");
@@ -67,16 +67,14 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     public void run() {
         System.out.println("entered run()");
         while (true) {
-            
-            if(networkHandlers.get(networkHandlers.size()-1).connected() ==true  ){//Gets the last network handler and checks if somebody is connected to it, 
-              networkHandlers.add(new NetworkHandler(actionHandler)); //If someody is connected a new networkhandler is created so more connectins can be accepted
+
+            if (networkHandlers.get(networkHandlers.size() - 1).connected() == true) {//Gets the last network handler and checks if somebody is connected to it, 
+                networkHandlers.add(new NetworkHandler(actionHandler)); //If someody is connected a new networkhandler is created so more connectins can be accepted
             }
 
             //This is the main loop for checking if something is hit by a projectile
             if (drawables.size() > 0) { //Prevents it from calling null items
                 for (Sprite o : drawables) {
-
-
 
                     if (o.getClass() == Projectile.class) { //Finds the first Projectile that will be matched up with a entity
                         for (Sprite u : drawables) {
@@ -100,44 +98,50 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                     ((Projectile) o).update();
                 }
             }
-            
+
         }
     }
-    
-    public void saveProgress(){
-    
+
+    public void saveProgress() {
+
     }
-    
+
     public void getData() {
+   
+
+    
         try {
             Class.forName(driver);
-            con = DriverManager.getConnection(url, username,password);
-            st = con.createStatement();
+        con = DriverManager.getConnection(url, username, password);
+        st = con.createStatement();
 
+        String[] name = new String[255];
+        String[] data = new String[255];
 
-            String[] name = new String[255];
-            String[] data = new String[255];
+        int n = 0;
+        String query = "select * from " + tableName;
+        rs = st.executeQuery(query);
+        while (rs.next()) {
+            name[n] = rs.getString(tableNameID);
+            data[n] = rs.getString(tableDataID);
+            n++;
 
-            int n = 0;
-            String query = "select * from " + tableName;
-            rs = st.executeQuery(query);
-            while (rs.next()) {
-                name[n] = rs.getString(tableNameID);
-                data[n] = rs.getString(tableDataID);
-                n++;
-
-            }
-
-            con.close();
-            st.close();
-            rs.close();
-
-
-        } catch (Exception e) {
-            System.out.println(e);
         }
+
+        con.close();
+        st.close();
+        rs.close();
+
     }
-    public void instertData(String name, String data,String Table) {
+    catch (Exception e
+
+    
+        ) {
+            System.out.println(e);
+    }
+}
+
+public void instertData(String name, String data, String Table) {
         try {
             Class.forName(driver);
             con = DriverManager.getConnection(url, username, password);
@@ -152,7 +156,6 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
             e.printStackTrace();
         }
     }
-    
 
     public void createAndShowGUI() { //The GUI is meant for debug and managing the server, the game will not be able to play from here
         System.out.println("Creating GUI");
@@ -169,7 +172,6 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         outputPanel.setLayout(new BoxLayout(outputPanel, BoxLayout.Y_AXIS));
         outputPanel.setAlignmentX(LEFT_ALIGNMENT);
 
-       
         frame.add(outputPanel);
 
         System.out.println("GUI created");
@@ -182,25 +184,27 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         outputPanel.add(outputList.get(outputList.size() - 1));
         outputPanel.setSize(xSize, 30 * outputList.size());
 
-    }
+    
+
+}
 
     private class ActionHandler implements ActionListener//this listens if a action is performed and exceutes the linked action 
-    {
+{
 
-        public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
 
-            try {
+        try {
 
-                String cmd = e.getActionCommand();
-                switch (cmd) {
+            String cmd = e.getActionCommand();
+            switch (cmd) {
 
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
             }
-
-            //   }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
+        //   }
     }
+}
 
 }
