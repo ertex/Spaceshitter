@@ -99,12 +99,12 @@ public class Program extends JFrame implements KeyListener, Runnable {
             }
 
         }
-        while(oldLocations.size()>0){
-       
+        while (oldLocations.size() > 0) {
+
             networkHandler.sendGetRequest(oldLocations.get(0).getIdentification()); //This should not really (naming convention and all) be here but it makes it simpler to code
             //Finds a missing Sprite/entity and sends off a request to fetch it from the server
             oldLocations.remove(0);
-        
+
         }
     }
 
@@ -119,9 +119,14 @@ public class Program extends JFrame implements KeyListener, Runnable {
         if (e.getKeyCode() == KeyEvent.VK_Q) {
             System.out.println("Q was pressed, shooting....");
             LocalPlayer.shoot();
-            drawables.addAll(LocalPlayer.fetchProjectileBuffer());//Is this really the best way to do this? is there a better way?
-        private ArrayList<Projectile> array = LocalPlayer.fetchProjectileBuffer());
-          
+
+            drawables.addAll(LocalPlayer.fetchProjectileBuffer());//adds the projectiles to the drawables array.
+
+            for (Projectile o : (ArrayList<Projectile>) LocalPlayer.fetchProjectileBuffer()) {
+//Itterates though and sends the Projectiles to the server so it does not have to send them back later though a get request
+                networkHandler.sendObjectMessage(o);
+            }
+
             LocalPlayer.clearProjectileBuffer();
 
         }
@@ -135,11 +140,11 @@ public class Program extends JFrame implements KeyListener, Runnable {
     @Override
     public void run() {
         while (true) {
-            if(lastSpriteRecived != null){
-            drawables.add(lastSpriteRecived);
-            lastSpriteRecived = null;
+            if (lastSpriteRecived != null) {
+                drawables.add(lastSpriteRecived);
+                lastSpriteRecived = null;
             }
-            
+
             if (networkHandler.connected() & lastLocationsRecived != null) {
                 updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables and also sends a request to the remote server to send it to client
                 lastLocationsRecived = null;
