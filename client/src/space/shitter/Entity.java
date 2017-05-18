@@ -9,8 +9,8 @@ public class Entity extends Sprite {
     protected boolean moveable, collideable;
     protected Rectangle rect;
  
-    public Entity(int identifier,double x, double y, int width, int height, BufferedImage img, boolean collideable) { //Static Entity
-        super(identifier,x, y, width, height, img);
+    public Entity(double x, double y, int width, int height, BufferedImage img, boolean collideable) { //Static Entity
+        super(x, y, width, height, img);
         this.moveable = false;
         this.collideable = collideable;
         speed = 0;
@@ -19,8 +19,8 @@ public class Entity extends Sprite {
         }
     }
 
-    public Entity(int identifier,double x, double y, int width, int height, int speed, BufferedImage img, boolean moveable, boolean collideable) {//controllable Entity
-        super(identifier,x, y, width, height, img);
+    public Entity(double x, double y, int width, int height, int speed, BufferedImage img, boolean moveable, boolean collideable) {//controllable Entity
+        super(x, y, width, height, img);
         this.moveable = moveable;
         this.collideable = collideable;
         this.speed = speed;
@@ -29,8 +29,8 @@ public class Entity extends Sprite {
         }
     }
 
-    public Entity(int identifier,double x, double y, int width, int height, BufferedImage img) {//Projectile entity
-        super(identifier,x, y, width, height, img);
+    public Entity(double x, double y, int width, int height, BufferedImage img) {//Projectile entity
+        super(x, y, width, height, img);
         this.moveable = true;
         this.collideable = true;
         this.speed = speed;

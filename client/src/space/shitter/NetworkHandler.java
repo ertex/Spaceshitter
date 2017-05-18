@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.util.ArrayList;
 
+
 public class NetworkHandler implements Runnable {
 
     ServerSocket serverSocket;
@@ -81,6 +82,10 @@ public class NetworkHandler implements Runnable {
         input = new ObjectInputStream(socket.getInputStream());
 
     }
+    
+    public void requestNextIdentifier(){ //sends a request to find the next Sprite Identifier, it gets set in the static variable in whileConnected()
+    sendByteMessage((byte)1);
+    }
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
         Object message = null;
@@ -113,6 +118,12 @@ public class NetworkHandler implements Runnable {
 
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
+            }
+            
+             if(Program.nextIdentifier ==0){
+            requestNextIdentifier(); //sends a get request to get the next Sprite identifier
+            //The reason why this if statement is here is so it's on a sepparate thread from the rest of the program since sprites freeze as they
+            //wait for a new ID to arrive. I could have made a sepparate thread for this in Program but this requiered less effort
             }
 
         } while (true);

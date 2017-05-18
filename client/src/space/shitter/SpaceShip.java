@@ -8,8 +8,8 @@ public class SpaceShip extends Entity{
     private boolean localPlayer;
     private ArrayList<Projectile> projectileBuffer;
     
-    public SpaceShip(int identiifier,int x, int y, int width, int height,int speed, BufferedImage img,boolean localPlayer){
-    super(identiifier,x, y, width, height,speed, img,true,true);
+    public SpaceShip(int x, int y, int width, int height,int speed, BufferedImage img,boolean localPlayer){
+    super(x, y, width, height,speed, img,true,true);
     projectileBuffer = new ArrayList();
     }
     
@@ -23,7 +23,8 @@ public class SpaceShip extends Entity{
     }
     
     public void shoot(){
-    projectileBuffer.add(new Projectile(1,x,y,(byte)0,new Point(1,0)));
+    projectileBuffer.add(new Projectile(x,y,(byte)0,new Point(1,0)));
+    Program.nextIdentifier = 0;
     }
     
     public ArrayList fetchProjectileBuffer(){

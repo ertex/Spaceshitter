@@ -33,14 +33,15 @@ public class Program extends JFrame implements KeyListener, Runnable {
     private NetworkHandler networkHandler = new NetworkHandler(actionHandler); //creates the Networkhandler to be able to send messages to remote
 
     public Program() { //Doubles as a Init() since it's called from the main class on startup
-
+    
         t = new Thread(this, "Main");
         xSize = 600;
         ySize = 600;
         createAndShowGUI();
         drawables = new ArrayList();
         //FIX------- Identification nimber for sapceship
-        LocalPlayer = new SpaceShip(1, 20, 20, 50, 50, 20, null, true); //Creates the Locxal player, this will be controlled by keystorkes from the local machine
+        LocalPlayer = new SpaceShip( 20, 20, 50, 50, 20, null, true); //Creates the Local player, this will be controlled by keystorkes from the local machine
+        //REMOVE LOCAL PLAYER FROM HERE IN FINAL VERSION!!!--------------------------------------------
         drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
 
         paintComponents();
@@ -140,6 +141,9 @@ public class Program extends JFrame implements KeyListener, Runnable {
     @Override
     public void run() {
         while (true) {
+            
+           
+            
             if (lastSpriteRecived != null) {
                 drawables.add(lastSpriteRecived);
                 lastSpriteRecived = null;

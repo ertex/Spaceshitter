@@ -96,7 +96,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
                 }
                 if (message != null) {
-                    if (message.getClass() == byte.class & SpaceShitterServer.lastByteRecived == 0) {
+                    if (message.getClass() == byte.class ) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets

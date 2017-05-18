@@ -24,10 +24,10 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     //This is the server of the SpaceShitter game created by David Johansson Te3 Sundergymnasiet.
     //the way this is built is that all of the clients send their data to the server, then the server sends locations to the clients in form of LocationData.
     //LocationData has a ID connected to a ID of a sprite, the sprites and LocationDatas gets compared and the Sprite gets matched and updated
-    //
-    public static byte lastByteRecived;
-    public static double lastDoubleRecived;
-    public static Sprite lastSpriteRecived;
+    //In hindsight I should have made almost every variable an arraylist, well not evry variable but those thats used by multiple sources.
+    //I should also have made a generic Data package class so I would not have to rely on controll wether a obejct is a byte with value 1 to controll EVERYTHING
+
+    public static int nextIdentifier;
     public static ArrayList<DataRequest> requests = new ArrayList(); //This is the new and impoved verison of the no loss data transfer that I am working on.
     //all of the netwok handlers will put their own Datarequests and then the server will process them one by one, returning what they want to have
     //This is hopefully superior to just having a single variable since this supports multiple networkhandlers and wont risk data loss.
@@ -91,6 +91,16 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                     byte data = (byte) o.getData();
                     if (data == 0) {
                         output("connected! to someone!, or maby just ping?");
+                    }
+                    
+                    if(data == 1){
+                        for (NetworkHandler n : networkHandlers) {
+                                if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
+                                n.sendMessage(nextIdentifier);
+                                nextIdentifier++; //So the same Identifier does not get used again
+                                }
+                        }
+                    
                     }
 
                 }
