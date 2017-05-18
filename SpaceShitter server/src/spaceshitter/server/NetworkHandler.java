@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
-   private ServerSocket serverSocket;
+    private ServerSocket serverSocket;
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
@@ -37,18 +37,20 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private long pingSent, pingRecived; //this is used to get the ping to remote
     private int pingTime; //the current pingTime
     private int foobar = 0;//This is used in pingRemote, you might want to look the other way?
-  
+    private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
+    //returns to the correct networkhandler
 
-    public NetworkHandler(ActionListener actionHandler) {
+    public NetworkHandler(ActionListener actionHandler, int networkID) {
+        this.networkID = networkID;
         running = true;
         connected = false; //wether or not local is connected to remote
         port = 33678; //the port that will be used to connect to the server
         t = new Thread(this, "NetworkHandler");
-        
-                try {
-            serverSocket = new ServerSocket(port,100); //creates the server socket that the remote will connect to
+
+        try {
+            serverSocket = new ServerSocket(port, 100); //creates the server socket that the remote will connect to
         } catch (IOException ex) {
-System.out.println("server socket failed to construct");
+            System.out.println("server socket failed to construct");
         }
 
         createGUI(actionHandler);
@@ -56,7 +58,6 @@ System.out.println("server socket failed to construct");
     }
 
     public void run() { //This is the core of the network, it makes sure that everything is executed in the right order
-
 
         while (running) {
 
@@ -91,23 +92,23 @@ System.out.println("server socket failed to construct");
                 if (message == null) {//Makes sure it does not overwrite anything
                     message = null; //removes some nasty nullpointers when there are no connections
 
-                    message = input.readObject();
-                    if (message != null) {
-                        break;
-                    }
+                    message = input.readObject(); //reads the inputstream
+
                 }
                 if (message != null) {
                     if (message.getClass() == byte.class & SpaceShitterServer.lastByteRecived == 0) {
 
-                        SpaceShitterServer.lastByteRecived = (byte) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                        SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
                     } else if (message.getClass() == double.class & SpaceShitterServer.lastDoubleRecived == 0) {
-                        SpaceShitterServer.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                        
+                        SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
                     } else if (message instanceof Sprite & SpaceShitterServer.lastSpriteRecived == null) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-                        SpaceShitterServer.lastSpriteRecived = (Sprite) message;
+                        
+                        SpaceShitterServer.newSprites.add((Sprite) message);
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                     }
                 }
@@ -220,6 +221,10 @@ System.out.println("server socket failed to construct");
 
     public void setPingRecived(long time) {
         pingRecived = time;
+    }
+    
+    public int getNetworkID(){
+    return networkID;
     }
 
 }
