@@ -99,10 +99,12 @@ public class Program extends JFrame implements KeyListener, Runnable {
             }
 
         }
-        if (oldLocations.size() > 0) {
+        while(oldLocations.size()>0){
+       
             networkHandler.sendGetRequest(oldLocations.get(0).getIdentification()); //This should not really (naming convention and all) be here but it makes it simpler to code
-            //Finds a missing Sprite7entity and sends off a request to fetch it from the server
+            //Finds a missing Sprite/entity and sends off a request to fetch it from the server
             oldLocations.remove(0);
+        
         }
     }
 
@@ -115,8 +117,11 @@ public class Program extends JFrame implements KeyListener, Runnable {
     public void keyPressed(KeyEvent e) {
 
         if (e.getKeyCode() == KeyEvent.VK_Q) {
+            System.out.println("Q was pressed, shooting....");
             LocalPlayer.shoot();
             drawables.addAll(LocalPlayer.fetchProjectileBuffer());//Is this really the best way to do this? is there a better way?
+        private ArrayList<Projectile> array = LocalPlayer.fetchProjectileBuffer());
+          
             LocalPlayer.clearProjectileBuffer();
 
         }

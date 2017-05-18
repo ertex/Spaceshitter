@@ -101,23 +101,31 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message.getClass() == double.class & SpaceShitterServer.lastDoubleRecived == 0) {
-                        
-                        SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                    } else if (message.getClass() == int.class) {
+                        SpaceShitterServer.requests.add(new DataRequest(networkID, (int) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message instanceof Sprite & SpaceShitterServer.lastSpriteRecived == null) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-                        
-                        SpaceShitterServer.newSprites.add((Sprite) message);
-                        message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-                    }
+                    
+
+                } else if (message.getClass() == double.class) {
+
+                    SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                    message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+
+                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+
+                    SpaceShitterServer.newSprites.add((Sprite) message);
+                    message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                 }
+            }
 
-            } catch (ClassNotFoundException n) {
+        } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
 
-        } while (true);
+    }
+
+while (true);
 
     }
 
