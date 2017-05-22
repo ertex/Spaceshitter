@@ -24,7 +24,6 @@ public class SpaceShip extends Entity{
     
     public void shoot(){
     projectileBuffer.add(new Projectile(x,y,(byte)0,new Point(1,0)));
-    Program.nextIdentifier = 0;
     }
     
     public ArrayList fetchProjectileBuffer(){

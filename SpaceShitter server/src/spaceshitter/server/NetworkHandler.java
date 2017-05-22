@@ -23,14 +23,10 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
-    // ObjectOutputStream output;
 
-    private JTextField ipFeild, portFeild, openPortFeild;
-    private JLabel localIp, localPort;
     String serverIP;
     int port;
-    private JPanel networkPanel;
-    private JButton connectButton;
+
     private Thread t;
     private boolean running, connected;
 
@@ -40,11 +36,12 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
     //returns to the correct networkhandler
 
-    public NetworkHandler(ActionListener actionHandler, int networkID) {
+    public NetworkHandler(int networkID) {
+        System.out.println("A new network handler has been created");
         this.networkID = networkID;
         running = true;
         connected = false; //wether or not local is connected to remote
-        port = 33678; //the port that will be used to connect to the server
+        port = 33678 + networkID; //the port that will be used to connect to the server, the port is increeseing for each new player so every pleyer gets his own socket
         t = new Thread(this, "NetworkHandler");
 
         try {
@@ -53,7 +50,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
             System.out.println("server socket failed to construct");
         }
 
-        createGUI(actionHandler);
         t.start();//also calls for the run
     }
 
@@ -96,7 +92,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
                 }
                 if (message != null) {
-                    if (message.getClass() == byte.class ) {
+                    if (message.getClass() == byte.class) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
@@ -105,27 +101,23 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (int) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    
+                    } else if (message.getClass() == double.class) {
 
-                } else if (message.getClass() == double.class) {
+                        SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
+                        message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-                    message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                    } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
 
-                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-
-                    SpaceShitterServer.newSprites.add((Sprite) message);
-                    message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        SpaceShitterServer.newSprites.add((Sprite) message);
+                        message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                    }
                 }
-            }
 
-        } catch (ClassNotFoundException n) {
+            } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
 
-    }
-
-while (true);
+        } while (true);
 
     }
 
@@ -144,17 +136,18 @@ while (true);
     }
 
     public void setupStreams() throws IOException {//creates the streams 
-        connected = true;
+        
         output = new ObjectOutputStream(socket.getOutputStream());
         output.flush();
         input = new ObjectInputStream(socket.getInputStream());
-
+connected = true;
     }
 
     public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
-        System.out.println("Waiting for sombody to connect...");
+        //System.out.println("Waiting for sombody to connect...");
         serverSocket.setSoTimeout(1000);
         socket = serverSocket.accept();
+        System.out.println("connected.");
 
     }
 
@@ -167,55 +160,16 @@ while (true);
     }
 
     public void sendMessage(Object message) { //sends a byte message to remote, a shorte less demanding message
+        if (output != null) {
+            try {
 
-        try {
+                output.writeObject(message);
 
-            output.writeObject(message);
+            } catch (IOException e) {
+                System.out.println("Could not send that message");
 
-        } catch (IOException e) {
-            System.out.println("Could not send that message");
-
+            }
         }
-    }
-
-    public void createGUI(ActionListener actionHandler) {
-
-        networkPanel = new JPanel();
-        networkPanel.setLayout(new FlowLayout());
-
-        localIp = new JLabel("Enter a Ip adress:");
-        localPort = new JLabel("your Port:"); //To make it clearer that the textfeild is the server port
-
-        ipFeild = new JTextField("IP");
-        ipFeild.setPreferredSize(new Dimension(100, 20));
-        ipFeild.setVisible(true);
-
-        portFeild = new JTextField("Port");
-        portFeild.setPreferredSize(new Dimension(50, 20));
-        portFeild.setVisible(true);
-
-        openPortFeild = new JTextField("Port");
-        openPortFeild.setText(port + "");
-        openPortFeild.setPreferredSize(new Dimension(50, 20));
-        openPortFeild.setVisible(true);
-        openPortFeild.addActionListener(actionHandler);//This actionListner won't work
-
-        connectButton = new JButton("Connect");
-        connectButton.setVisible(true);
-        connectButton.setText("Connect");
-        connectButton.addActionListener(actionHandler);
-
-        networkPanel.add(localIp); //adding all the Jcomponents in the right order
-        networkPanel.add(ipFeild);
-        networkPanel.add(portFeild);
-        networkPanel.add(connectButton);
-        networkPanel.add(localPort);
-        networkPanel.add(openPortFeild);
-
-    }
-
-    public JPanel getNetworkPanel() { //This returns the networkpanel so it can be used in the main GUI
-        return networkPanel;
     }
 
     public boolean connected() {
@@ -230,9 +184,9 @@ while (true);
     public void setPingRecived(long time) {
         pingRecived = time;
     }
-    
-    public int getNetworkID(){
-    return networkID;
+
+    public int getNetworkID() {
+        return networkID;
     }
 
 }

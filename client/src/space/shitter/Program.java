@@ -30,7 +30,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
     private Thread t;
     private boolean foobar = false;
     private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
-    private NetworkHandler networkHandler = new NetworkHandler(actionHandler); //creates the Networkhandler to be able to send messages to remote
+    private NetworkHandler networkHandler = new NetworkHandler(); //creates the Networkhandler to be able to send messages to remote
 
     public Program() { //Doubles as a Init() since it's called from the main class on startup
     

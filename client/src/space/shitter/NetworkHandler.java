@@ -17,7 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.util.ArrayList;
 
-
 public class NetworkHandler implements Runnable {
 
     ServerSocket serverSocket;
@@ -25,12 +24,8 @@ public class NetworkHandler implements Runnable {
     ObjectOutputStream output;
     ObjectInputStream input;
 
-    private JTextField ipFeild, portFeild, openPortFeild;
-    private JLabel localIp, localPort;
     String serverIP;
     int port;
-    private JPanel networkPanel;
-    private JButton connectButton;
     private Thread t;
     private boolean running, connected;
     private String ip;
@@ -39,24 +34,24 @@ public class NetworkHandler implements Runnable {
     private int pingTime; //the current pingTime
     private int foobar = 0;//This is used in pingRemote, you might want to look the other way?
 
-    public NetworkHandler(ActionListener actionHandler) {
+    public NetworkHandler() {
         running = true;
         connected = false; //wether or not local is connected to remote
         port = 33678; //the port that will be used to connect to the server
         ip = "localhost";
         t = new Thread(this, "NetworkHandler");
-        createGUI(actionHandler);
+
         t.start();//also calls for the run
     }
 
     public void run() { //This is the core of the network, it makes sure that everything is executed in the right order
-
 
         while (running) {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
                 try {
                     connectToServer();
+
                 } catch (IOException e) {
                     System.out.println("Connection rejected");
                 }
@@ -80,18 +75,18 @@ public class NetworkHandler implements Runnable {
         output = new ObjectOutputStream(socket.getOutputStream());
         output.flush();
         input = new ObjectInputStream(socket.getInputStream());
-
+        connected = true;
     }
-    
-    public void requestNextIdentifier(){ //sends a request to find the next Sprite Identifier, it gets set in the static variable in whileConnected()
-    sendByteMessage((byte)1);
+
+    public void requestNextIdentifier() { //sends a request to find the next Sprite Identifier, it gets set in the static variable in whileConnected()
+        sendByteMessage((byte) 1);//byte message 1 is the code for next ID
     }
 
     public void whileConnected() throws IOException { //this method is the main core of the class, it recives messages
         Object message = null;
         sendByteMessage((byte) 0);//sends a 0 in confirmation that it is connected
 
-        do { //Main loop of networkhandler
+        while (connected) { //Main loop of networkhandler
             try {
                 System.out.println("got a message!");
                 message = input.readObject();
@@ -114,19 +109,20 @@ public class NetworkHandler implements Runnable {
                     }
                 } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
                     Program.lastSpriteRecived = (Sprite) message;
+                    System.out.println("Recived a sprite!");
                 }
 
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
-            
-             if(Program.nextIdentifier ==0){
-            requestNextIdentifier(); //sends a get request to get the next Sprite identifier
-            //The reason why this if statement is here is so it's on a sepparate thread from the rest of the program since sprites freeze as they
-            //wait for a new ID to arrive. I could have made a sepparate thread for this in Program but this requiered less effort
+
+            if (Program.nextIdentifier == 0) {
+                requestNextIdentifier(); //sends a get request to get the next Sprite identifier
+                //The reason why this if statement is here is so it's on a sepparate thread from the rest of the program since sprites freeze as they
+                //wait for a new ID to arrive. I could have made a sepparate thread for this in Program but this requiered less effort
             }
 
-        } while (true);
+        }
 
     }
 
@@ -150,6 +146,7 @@ public class NetworkHandler implements Runnable {
         input.close();
         socket.close();
         socket = null;
+        connected = false;
     }
 
     public void sendGetRequest(int identifier) { //Sends a request to retreive a Object with the inputed id
@@ -198,56 +195,25 @@ public class NetworkHandler implements Runnable {
     }
 
     public void connectToServer() throws IOException {//tries to send a connection to another client
+        int i = 0;
+        while (connected != true) {
 
-        System.out.println("Connecting ...");
-        try {
-            socket = new Socket(InetAddress.getByName(ip), 25565);
-            socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
-            System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
-        } catch (java.net.UnknownHostException e) {
-            System.out.println("conection failed");
+            if (i > 20) {
+                i = 0;//This is to cyckle through the ports that can be avalible
+            }
 
+            System.out.println("Connecting ...");
+            try {
+                socket = new Socket(InetAddress.getByName(ip), 33678+i);
+                socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
+                System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
+
+            } catch (java.net.UnknownHostException e) {
+                System.out.println("conection failed");
+
+            }
+            i++;
         }
-    }
-
-    public void createGUI(ActionListener actionHandler) {
-
-        networkPanel = new JPanel();
-        networkPanel.setLayout(new FlowLayout());
-
-        localIp = new JLabel("Enter a Ip adress:");
-        localPort = new JLabel("your Port:"); //To make it clearer that the textfeild is the server port
-
-        ipFeild = new JTextField("IP");
-        ipFeild.setPreferredSize(new Dimension(100, 20));
-        ipFeild.setVisible(true);
-
-        portFeild = new JTextField("Port");
-        portFeild.setPreferredSize(new Dimension(50, 20));
-        portFeild.setVisible(true);
-
-        openPortFeild = new JTextField("Port");
-        openPortFeild.setText(port + "");
-        openPortFeild.setPreferredSize(new Dimension(50, 20));
-        openPortFeild.setVisible(true);
-        openPortFeild.addActionListener(actionHandler);//This actionListner won't work
-
-        connectButton = new JButton("Connect");
-        connectButton.setVisible(true);
-        connectButton.setText("Connect");
-        connectButton.addActionListener(actionHandler);
-
-        networkPanel.add(localIp); //adding all the Jcomponents in the right order
-        networkPanel.add(ipFeild);
-        networkPanel.add(portFeild);
-        networkPanel.add(connectButton);
-        networkPanel.add(localPort);
-        networkPanel.add(openPortFeild);
-
-    }
-
-    public JPanel getNetworkPanel() { //This returns the networkpanel so it can be used in the main GUI
-        return networkPanel;
     }
 
     public boolean connected() {

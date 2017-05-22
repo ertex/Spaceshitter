@@ -8,8 +8,8 @@ public class Projectile extends Entity {
 
     private Point direction;
 
-    public Projectile(int identiifier,double x, double y, byte type, Point direction) {
-        super(identiifier,x, y, 0, 0, null);
+    public Projectile(double x, double y, byte type, Point direction) {
+        super(x, y, 0, 0, null);
         this.direction = direction;
         if (type == 0) {
             speed = 5;

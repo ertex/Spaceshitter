@@ -14,8 +14,15 @@ public class Sprite {
        private int identifier;//this is bound to the Sprite that sent the locationData, it is ment to remove confusion around what entity sent it.
 
 
-    public Sprite(int identifier ,double x, double y, int width, int height, BufferedImage img) {
-        this.identifier = identifier;
+    public Sprite(double x, double y, int width, int height, BufferedImage img) {
+        while (SpaceShitterServer.nextIdentifier == 0){
+        //This while loop is just to hold the program still for a while until a new nextIdentifier has arrived
+            
+        }
+        
+      identifier = SpaceShitterServer.nextIdentifier; //This simlyfies the way Sprites are created since it requiers less effort in code in other places
+      //In hindsight Should I have made a Arraylist here aswell in order to have a buffert to smooth out the program.
+      SpaceShitterServer.nextIdentifier = 0;
         this.x = x;
         this.y = y;
         this.width = width;
