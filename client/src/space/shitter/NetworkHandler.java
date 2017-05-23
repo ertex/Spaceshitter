@@ -198,13 +198,9 @@ public class NetworkHandler implements Runnable {
         int i = 0;
         while (connected != true) {
 
-            if (i > 20) {
-                i = 0;//This is to cyckle through the ports that can be avalible
-            }
-
             System.out.println("Connecting ...");
             try {
-                socket = new Socket(InetAddress.getByName(ip), 33678+i);
+                socket = new Socket(InetAddress.getByName(ip), 33678);
                 socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
                 System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
 
@@ -212,7 +208,6 @@ public class NetworkHandler implements Runnable {
                 System.out.println("conection failed");
 
             }
-            i++;
         }
     }
 

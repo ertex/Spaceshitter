@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
-    private ServerSocket serverSocket;
+
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
@@ -36,19 +36,15 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
     //returns to the correct networkhandler
 
-    public NetworkHandler(int networkID) {
+    public NetworkHandler(Socket socket) {
         System.out.println("A new network handler has been created");
-        this.networkID = networkID;
+        this.socket = socket;
         running = true;
         connected = false; //wether or not local is connected to remote
         port = 33678 + networkID; //the port that will be used to connect to the server, the port is increeseing for each new player so every pleyer gets his own socket
         t = new Thread(this, "NetworkHandler");
 
-        try {
-            serverSocket = new ServerSocket(port, 100); //creates the server socket that the remote will connect to
-        } catch (IOException ex) {
-            System.out.println("server socket failed to construct");
-        }
+   
 
         t.start();//also calls for the run
     }
@@ -58,11 +54,8 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         while (running) {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
-                try {
-                    waitForConnect();
-                } catch (IOException e) {
-
-                }
+                    
+                
             } else {
 
                 try {
@@ -100,7 +93,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
                     } else if (message.getClass() == int.class) {
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (int) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-
+                        System.out.println("Int recived");
                     } else if (message.getClass() == double.class) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
@@ -136,20 +129,14 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     }
 
     public void setupStreams() throws IOException {//creates the streams 
-        
+
         output = new ObjectOutputStream(socket.getOutputStream());
         output.flush();
         input = new ObjectInputStream(socket.getInputStream());
-connected = true;
+        connected = true;
     }
 
-    public void waitForConnect() throws IOException { //tries to establish a connection every 1 second with a incoming connection
-        //System.out.println("Waiting for sombody to connect...");
-        serverSocket.setSoTimeout(1000);
-        socket = serverSocket.accept();
-        System.out.println("connected.");
 
-    }
 
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
 
@@ -159,16 +146,19 @@ connected = true;
 
     }
 
-    public void sendMessage(Object message) { //sends a byte message to remote, a shorte less demanding message
+    public void sendMessage(Object message) { //sends a message to remote
         if (output != null) {
             try {
 
                 output.writeObject(message);
+                output.flush();
 
             } catch (IOException e) {
                 System.out.println("Could not send that message");
 
             }
+        } else {
+            System.out.println("Output is null");
         }
     }
 

@@ -26,7 +26,6 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     //LocationData has a ID connected to a ID of a sprite, the sprites and LocationDatas gets compared and the Sprite gets matched and updated
     //In hindsight I should have made almost every variable an arraylist, well not evry variable but those thats used by multiple sources.
     //I should also have made a generic Data package class so I would not have to rely on controll wether a obejct is a byte with value 1 to controll EVERYTHING
-
     public static int nextIdentifier;
     public static ArrayList<DataRequest> requests = new ArrayList(); //This is the new and impoved verison of the no loss data transfer that I am working on.
     //all of the netwok handlers will put their own Datarequests and then the server will process them one by one, returning what they want to have
@@ -45,6 +44,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
     private ArrayList<NetworkHandler> networkHandlers = new ArrayList();
     private ArrayList<LocationData> locations = new ArrayList();
+    private ConnectionHandler connectionHandler;
 
     private Connection con;
     private Statement st;
@@ -66,11 +66,12 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     }
 
     public SpaceShitterServer() {
-        networkHandlers.add(new NetworkHandler(networkHandlers.size())); //creates a networkhandler that you can connect to, the ID is just the size of the array
+        connectionHandler  = new ConnectionHandler(networkHandlers);//creates the handler for new connections, with a reference to networkhandler 
+       
         drawables = new ArrayList(); //This arraylist contains almost everything that is of importance and will be able to be drawn
-        nextIdentifier =1;
-        drawables.add(new Sprite( (double) 345, (double) 234, 54, 54, null));
-        
+        nextIdentifier = 1;
+        drawables.add(new Sprite((double) 345, (double) 234, 54, 54, null));
+
         createAndShowGUI();
         running = true;
         output("asdasd");
@@ -82,14 +83,11 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         System.out.println("entered run()");
         while (running) {
 
-            if (networkHandlers.get(networkHandlers.size() - 1).connected() == true) {//Gets the last network handler and checks if somebody is connected to it, 
-                output("A new connection has arrived!");
-                networkHandlers.add(new NetworkHandler(networkHandlers.size())); //If someody is connected a new networkhandler is created so more connectins can be accepted
-            }
+         
             //Adds all of the new sprites to drawables
             drawables.addAll(newSprites);
             newSprites.clear();
-       
+
             //if there are any data requests, the appropriate action will happen, for example sends away a specific sprite 
             //if a request for a specific sprite was requested
             for (DataRequest o : requests) {
@@ -98,15 +96,15 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                     if (data == 0) {
                         output("connected! to someone!, or maby just ping?");
                     }
-                    
-                    if(data == 1){
+
+                    if (data == 1) {
                         for (NetworkHandler n : networkHandlers) {
-                                if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
+                            if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
                                 n.sendMessage(nextIdentifier);
                                 nextIdentifier++; //So the same Identifier does not get used again
-                                }
+                            }
                         }
-                    
+
                     }
 
                 }
@@ -158,23 +156,23 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                     ((Projectile) o).update();
                 }
             }
-            
+
             //Sends of new locationdata to clients
-            if(drawables.size() >0 & networkHandlers.size()>0){
-                
-            for(Sprite o: drawables){//generates a new array with locations to be sent 
-            locations.add(o.getLocationData());
-            }
-            for(NetworkHandler o : networkHandlers){
-                if(o.connected()){//Security!
-            o.sendMessage(locations); //sends the locations to the clients
+            if (drawables.size() > 0 & networkHandlers.size() > 0) {
+
+                for (Sprite o : drawables) {//generates a new array with locations to be sent 
+                    locations.add(o.getLocationData());
                 }
-            
+                for (NetworkHandler o : networkHandlers) {
+                    if (o.connected()) {//Security!
+                        o.sendMessage(locations); //sends the locations to the clients
+                    }
+
+                }
+                locations.clear();//clears the locations for the next itteration.
+                //Optimising suggestion here would be to only send updates to sprites that was moved.
             }
-            locations.clear();//clears the locations for the next itteration.
-            //Optimising suggestion here would be to only send updates to sprites that was moved.
-            }
-            
+
         }
     }
 
