@@ -46,7 +46,7 @@ public class ConnectionHandler implements Runnable {
         //System.out.println("Waiting for sombody to connect...");
         serverSocket.setSoTimeout(1000);
         
-        networks.add(new NetworkHandler(serverSocket.accept()));
+        networks.add(new NetworkHandler(serverSocket.accept(),networks.size()));
         System.out.println("connected.");
     }
 // ConnectionHandler and spaceshitter.server belongs to David Johansson Te2

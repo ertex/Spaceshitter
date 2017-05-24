@@ -71,7 +71,7 @@ public class NetworkHandler implements Runnable {
     }
 
     public void setupStreams() throws IOException {//creates the streams 
-        connected = true;
+
         output = new ObjectOutputStream(socket.getOutputStream());
         output.flush();
         input = new ObjectInputStream(socket.getInputStream());
@@ -100,16 +100,19 @@ public class NetworkHandler implements Runnable {
 
                     Program.nextIdentifier = (int) message;
 
-                } else if (message.getClass() == ArrayList.class) { //Checks to see if the recived message is a arraylist
+                } else if (message.getClass() == LocationDataArray.class) { //Checks to see if the recived message is a arraylist
                     System.out.println("got an array! woo!");
-                    ArrayList array = (ArrayList) message;
-                    if (array.get(0).getClass() == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
-                        Program.lastLocationsRecived = array;
+                    LocationDataArray locations = (LocationDataArray) message;
+                    if (locations.getObject(0).getClass() == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
+                        Program.lastLocationsRecived = locations.getArray();
 
                     }
                 } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
                     Program.lastSpriteRecived = (Sprite) message;
                     System.out.println("Recived a sprite!");
+                }
+                else{
+                System.out.println("This is weird, unknown datatype");
                 }
 
             } catch (ClassNotFoundException n) {
@@ -195,7 +198,7 @@ public class NetworkHandler implements Runnable {
     }
 
     public void connectToServer() throws IOException {//tries to send a connection to another client
-        int i = 0;
+
         while (connected != true) {
 
             System.out.println("Connecting ...");
@@ -203,6 +206,7 @@ public class NetworkHandler implements Runnable {
                 socket = new Socket(InetAddress.getByName(ip), 33678);
                 socket.setTcpNoDelay(true);//makes sure the is no delay to the server. 
                 System.out.println("Connected!!!! to: " + socket.getInetAddress().getHostName());
+                connected = true;
 
             } catch (java.net.UnknownHostException e) {
                 System.out.println("conection failed");

@@ -19,7 +19,6 @@ import javax.swing.JTextField;
 
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
-
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
@@ -36,16 +35,15 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
     //returns to the correct networkhandler
 
-    public NetworkHandler(Socket socket) {
+    public NetworkHandler(Socket socket, int networkID) {
+
         System.out.println("A new network handler has been created");
+        this.networkID = networkID;
         this.socket = socket;
         running = true;
         connected = false; //wether or not local is connected to remote
-        port = 33678 + networkID; //the port that will be used to connect to the server, the port is increeseing for each new player so every pleyer gets his own socket
+        port = 33678; //the port that will be used to connect to the server, the port is increeseing for each new player so every pleyer gets his own socket
         t = new Thread(this, "NetworkHandler");
-
-   
-
         t.start();//also calls for the run
     }
 
@@ -54,8 +52,7 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         while (running) {
 
             if (socket == null) { //checks if there is a estblished connection, if not: check for incoming connections
-                    
-                
+
             } else {
 
                 try {
@@ -136,8 +133,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         connected = true;
     }
 
-
-
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
 
         output.close();
@@ -146,7 +141,24 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     }
 
-    public void sendMessage(Object message) { //sends a message to remote
+    public void sendLocationDataArrayMessage(LocationDataArray message) { //Sends a LocationDataArray message, it seems like
+        //The socket would not let me send it as an Object(class)
+        if (output != null) {
+            try {
+
+                output.writeObject((LocationDataArray) message);
+                output.flush();
+
+            } catch (IOException e) {
+                System.out.println("Could not send that message");
+            }
+
+        } else {
+            System.out.println("Output is null");
+        }
+    }
+
+    public void sendMessage(Object message) { //sends a Object message to remote
         if (output != null) {
             try {
 
@@ -155,8 +167,8 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
             } catch (IOException e) {
                 System.out.println("Could not send that message");
-
             }
+
         } else {
             System.out.println("Output is null");
         }
@@ -168,7 +180,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     public int getPingTime() {
         return pingTime;
-
     }
 
     public void setPingRecived(long time) {

@@ -43,7 +43,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     JPanel outputPanel;
     private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
     private ArrayList<NetworkHandler> networkHandlers = new ArrayList();
-    private ArrayList<LocationData> locations = new ArrayList();
+    //private ArrayList<LocationData> locations = new ArrayList();
     private ConnectionHandler connectionHandler;
 
     private Connection con;
@@ -66,8 +66,8 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     }
 
     public SpaceShitterServer() {
-        connectionHandler  = new ConnectionHandler(networkHandlers);//creates the handler for new connections, with a reference to networkhandler 
-       
+        connectionHandler = new ConnectionHandler(networkHandlers);//creates the handler for new connections, with a reference to networkhandler 
+
         drawables = new ArrayList(); //This arraylist contains almost everything that is of importance and will be able to be drawn
         nextIdentifier = 1;
         drawables.add(new Sprite((double) 345, (double) 234, 54, 54, null));
@@ -83,7 +83,6 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         System.out.println("entered run()");
         while (running) {
 
-         
             //Adds all of the new sprites to drawables
             drawables.addAll(newSprites);
             newSprites.clear();
@@ -159,18 +158,18 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
             //Sends of new locationdata to clients
             if (drawables.size() > 0 & networkHandlers.size() > 0) {
-
+                LocationDataArray locations = new LocationDataArray();//LocationDataArray is only temporary and will be cleared after each itteration
+                //of the prorgram. The reasoning to use a LocationDataArray instead of an arraylist is because outputstreams are whiny babys
+                //and would not allow me to send an arraylist
                 for (Sprite o : drawables) {//generates a new array with locations to be sent 
                     locations.add(o.getLocationData());
                 }
                 for (NetworkHandler o : networkHandlers) {
                     if (o.connected()) {//Security!
-                        o.sendMessage(locations); //sends the locations to the clients
+                        o.sendLocationDataArrayMessage(locations); //sends the locations to the clients
                     }
 
                 }
-                locations.clear();//clears the locations for the next itteration.
-                //Optimising suggestion here would be to only send updates to sprites that was moved.
             }
 
         }
