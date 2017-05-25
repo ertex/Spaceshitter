@@ -46,6 +46,9 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     //private ArrayList<LocationData> locations = new ArrayList();
     private ConnectionHandler connectionHandler;
 
+    private long lastUpdateTick;
+    private final int TPS = 30;//might not want to haave this final
+
     private Connection con;
     private Statement st;
     private ResultSet rs;
@@ -83,96 +86,110 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         System.out.println("entered run()");
         while (running) {
 
-            //Adds all of the new sprites to drawables
-            drawables.addAll(newSprites);
-            newSprites.clear();
+            if (System.currentTimeMillis() > (lastUpdateTick + (1000 / TPS))) {
+//This if statement is here to make sure the program does not run to fast and gets all consuming
 
-            //if there are any data requests, the appropriate action will happen, for example sends away a specific sprite 
-            //if a request for a specific sprite was requested
-            for (DataRequest o : requests) {
-                if (o.getData().getClass() == byte.class) {
-                    byte data = (byte) o.getData();
-                    if (data == 0) {
-                        output("connected! to someone!, or maby just ping?");
+                //saves the last update time for refference
+                lastUpdateTick = System.currentTimeMillis();
+                update();
+
+            }
+        }
+    }
+
+    public void update() {
+
+        //Adds all of the new sprites to drawables
+        drawables.addAll(newSprites);
+        newSprites.clear();
+
+        //if there are any data requests, the appropriate action will happen, for example sends away a specific sprite 
+        //if a request for a specific sprite was requested
+        for (DataRequest o : requests) {
+            if (o.getData().getClass() == byte.class) {
+                byte data = (byte) o.getData();
+                if (data == 0) {
+                    output("connected! to someone!, or maby just ping?");
+                }
+
+                if (data == 1) {
+                    for (NetworkHandler n : networkHandlers) {
+                        if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
+                            n.sendMessage(nextIdentifier);
+                            nextIdentifier++; //So the same Identifier does not get used again
+                        }
                     }
 
-                    if (data == 1) {
+                }
+
+            }
+            if (o.getData().getClass() == int.class) { //if a Int is recived it means a client needs a sprite with a specific Identification
+                //Then the specific sprite will be sent via networkhandler to the client that requested it
+                int data = (byte) o.getData();
+                for (Sprite u : drawables) {
+                    if (u.getIdentification() == data) {
                         for (NetworkHandler n : networkHandlers) {
-                            if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
-                                n.sendMessage(nextIdentifier);
-                                nextIdentifier++; //So the same Identifier does not get used again
-                            }
-                        }
-
-                    }
-
-                }
-                if (o.getData().getClass() == int.class) { //if a Int is recived it means a client needs a sprite with a specific Identification
-                    //Then the specific sprite will be sent via networkhandler to the client that requested it
-                    int data = (byte) o.getData();
-                    for (Sprite u : drawables) {
-                        if (u.getIdentification() == data) {
-                            for (NetworkHandler n : networkHandlers) {
-                                if (n.getNetworkID() == o.getNetworkID()) {
-                                    n.sendMessage(u);
+                            if (n.getNetworkID() == o.getNetworkID()) {
+                                n.sendMessage(u);
 //PHEW! this nest of if and For:s lead up to this, all of the ID's match now and the Sprite can be sent to the correct networkHandler
-                                }
-                            }
-
-                        }
-                    }
-                }
-
-                if (o.getData().getClass() == double.class) {
-
-                }
-
-            }
-            //This is the main loop for checking if something is hit by a projectile---
-            if (drawables.size() > 0) { //Prevents it from calling null items
-                for (Sprite o : drawables) {
-
-                    if (o.getClass() == Projectile.class) { //Finds the first Projectile that will be matched up with a entity
-                        for (Sprite u : drawables) {
-                            if (u.getClass() == Entity.class & o != u) { //Finds the entity that will be compared
-                                Projectile p = (Projectile) o;
-                                Entity e = (Entity) u;
-                                if (p.getRect().intersects(e.getRect())) {
-                                    //Kill off(damage) e if p intersects with it
-                                }
                             }
                         }
+
                     }
                 }
             }
 
-            //Updates the entities---
-            for (Sprite o : drawables) {
-                if (o.getClass() == Entity.class) {
-                    ((Entity) o).update();
-                }
-                if (o.getClass() == Projectile.class) {
-                    ((Projectile) o).update();
-                }
-            }
+            if (o.getData().getClass() == double.class) {
 
-            //Sends of new locationdata to clients
-            if (drawables.size() > 0 & networkHandlers.size() > 0) {
-                LocationDataArray locations = new LocationDataArray();//LocationDataArray is only temporary and will be cleared after each itteration
-                //of the prorgram. The reasoning to use a LocationDataArray instead of an arraylist is because outputstreams are whiny babys
-                //and would not allow me to send an arraylist
-                for (Sprite o : drawables) {//generates a new array with locations to be sent 
-                    locations.add(o.getLocationData());
-                }
-                for (NetworkHandler o : networkHandlers) {
-                    if (o.connected()) {//Security!
-                        o.sendLocationDataArrayMessage(locations); //sends the locations to the clients
-                    }
-
-                }
             }
 
         }
+        //This is the main loop for checking if something is hit by a projectile---
+        if (drawables.size() > 0) { //Prevents it from calling null items
+            for (Sprite o : drawables) {
+
+                if (o.getClass() == Projectile.class) { //Finds the first Projectile that will be matched up with a entity
+                    for (Sprite u : drawables) {
+                        if (u.getClass() == Entity.class & o != u) { //Finds the entity that will be compared
+                            Projectile p = (Projectile) o;
+                            Entity e = (Entity) u;
+                            if (p.getRect().intersects(e.getRect())) {
+                                //Kill off(damage) e if p intersects with it
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //Updates the entities---
+        for (Sprite o : drawables) {
+            if (o.getClass() == Entity.class) {
+                ((Entity) o).update();
+            }
+            if (o.getClass() == Projectile.class) {
+                ((Projectile) o).update();
+            }
+        }
+
+        //Sends of new locationdata to clients
+        if (drawables.size() > 0 & networkHandlers.size() > 0) {
+            LocationDataArray locations = new LocationDataArray();//LocationDataArray is only temporary and will be cleared after each itteration
+            //of the prorgram. The reasoning to use a LocationDataArray instead of an arraylist is because outputstreams are whiny babys
+            //and would not allow me to send an arraylist
+
+            for (NetworkHandler o : networkHandlers) {
+                if (o.connected()) {//Security!
+                    for (Sprite u : drawables) {//generates a new array with locations to be sent 
+                        o.sendMessage(u.getLocationData().getData()); //sends a location to the clients
+                        //This will be repeated several Times
+                    }
+
+                }
+
+            }
+        }
+
     }
 
     public void saveProgress() {

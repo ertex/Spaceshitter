@@ -12,12 +12,14 @@ import java.net.Socket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
+public class NetworkHandler implements Runnable{ //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
     private Socket socket;
     private ObjectOutputStream output;
@@ -33,11 +35,14 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private int pingTime; //the current pingTime
     private int foobar = 0;//This is used in pingRemote, you might want to look the other way?
     private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
+    private int timeoutAmmount; //How many Cocurrent IOExceptions can be made before the sockets termintes, this is so there are no unneccesarry sockets open.
+    private int timeoutCount; //Complementry to above
     //returns to the correct networkhandler
 
     public NetworkHandler(Socket socket, int networkID) {
 
         System.out.println("A new network handler has been created");
+        timeoutAmmount=200; 
         this.networkID = networkID;
         this.socket = socket;
         running = true;
@@ -106,8 +111,13 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
+            if(timeoutCount> timeoutAmmount){
+            
+            connected = false; //breaks the loop Hence closing the streams
+            System.out.println("A client disconnected!");
+            }
 
-        } while (true);
+        } while (connected);
 
     }
 
@@ -125,12 +135,21 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
         }
     }
 
-    public void setupStreams() throws IOException {//creates the streams 
+    public void setupStreams() {
+        try {
+            //creates the streams
 
-        output = new ObjectOutputStream(socket.getOutputStream());
-        output.flush();
-        input = new ObjectInputStream(socket.getInputStream());
-        connected = true;
+            output = new ObjectOutputStream(socket.getOutputStream());
+            output.flush();
+            input = new ObjectInputStream(socket.getInputStream());
+            connected = true;
+            sendMessage((byte) 0);
+            System.out.println("Streams are setup! ready to go!");
+        } catch (IOException ex) {
+            
+            System.out.println("strems did not get setup");
+        }
+
     }
 
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
@@ -141,32 +160,18 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     }
 
-    public void sendLocationDataArrayMessage(LocationDataArray message) { //Sends a LocationDataArray message, it seems like
-        //The socket would not let me send it as an Object(class)
-        if (output != null) {
-            try {
-
-                output.writeObject((LocationDataArray) message);
-                output.flush();
-
-            } catch (IOException e) {
-                System.out.println("Could not send that message");
-            }
-
-        } else {
-            System.out.println("Output is null");
-        }
-    }
-
     public void sendMessage(Object message) { //sends a Object message to remote
         if (output != null) {
             try {
-
+                
                 output.writeObject(message);
                 output.flush();
+                
+                timeoutCount=0;
 
             } catch (IOException e) {
                 System.out.println("Could not send that message");
+                timeoutCount++;
             }
 
         } else {

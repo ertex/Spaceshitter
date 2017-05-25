@@ -100,19 +100,22 @@ public class NetworkHandler implements Runnable {
 
                     Program.nextIdentifier = (int) message;
 
-                } else if (message.getClass() == LocationDataArray.class) { //Checks to see if the recived message is a arraylist
-                    System.out.println("got an array! woo!");
-                    LocationDataArray locations = (LocationDataArray) message;
-                    if (locations.getObject(0).getClass() == (LocationData.class)) { //if the arraylist is an arraylist that contains LocationData
-                        Program.lastLocationsRecived = locations.getArray();
-
+                } else if (message.getClass() == String.class) { //Checks to see if the recived message is a arraylist
+                    System.out.println("got a Sprite! woo!");
+                    String[] parts = ((String) message).split(",");
+                    if (parts[0].equals("S") & parts[1].equals("LD")) {//makes sure the data string is a compatible type
+                        //S is for start, LD is for LocationData
+                        Program.lastLocationsRecived.add(new LocationData((String) message));
                     }
+                    else if(parts[0].equals("S") & parts[1].equals("LD")){
+                    //Add a condition for Sprites Here
+                    }
+
                 } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
                     Program.lastSpriteRecived = (Sprite) message;
                     System.out.println("Recived a sprite!");
-                }
-                else{
-                System.out.println("This is weird, unknown datatype");
+                } else {
+                    System.out.println("This is weird, unknown datatype");
                 }
 
             } catch (ClassNotFoundException n) {

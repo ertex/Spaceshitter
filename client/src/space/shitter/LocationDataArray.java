@@ -2,7 +2,7 @@ package space.shitter;
 
 import java.util.ArrayList;
 
-public class LocationDataArray {
+public class LocationDataArray{
 // LocationDataArray and spaceshitter.server belongs to David Johansson Te2
 //The only job for this clas is to hold an arraylist since SendObject complained about arraylists,outputstreams are crybabys
     
