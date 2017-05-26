@@ -17,14 +17,14 @@ public class Sprite {
     protected String data, imgURL;
 
     public Sprite(double x, double y, int width, int height, BufferedImage img, String imgURL) {
-        while (Program.nextIdentifier == 0) {
+        while (SpaceShitterServer.nextIdentifier == 0) {
             //This while loop is just to hold the program still for a while until a new nextIdentifier has arrived
 
         }
         this.imgURL = imgURL;
-        identifier = Program.nextIdentifier; //This simlyfies the way Sprites are created since it requiers less effort in code in other places
+        identifier = SpaceShitterServer.nextIdentifier; //This simlyfies the way Sprites are created since it requiers less effort in code in other places
         //In hindsight Should I have made a Arraylist here aswell in order to have a buffert to smooth out the program.
-        Program.nextIdentifier = 0;
+        SpaceShitterServer.nextIdentifier = 0;
 
         this.x = x;
         this.y = y;
@@ -43,7 +43,7 @@ public class Sprite {
                 System.out.println(" Error Default Image not found!!");
             }
         }
-        data = "S" + "S" + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
+        data = "S" + "S," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
     }
 
     public Sprite(String data) {//A Sprite created from a string of data, probobly from a InputStream

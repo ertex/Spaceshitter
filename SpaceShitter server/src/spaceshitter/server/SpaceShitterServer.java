@@ -73,7 +73,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
         drawables = new ArrayList(); //This arraylist contains almost everything that is of importance and will be able to be drawn
         nextIdentifier = 1;
-        drawables.add(new Sprite((double) 345, (double) 234, 54, 54, null));
+        drawables.add(new Sprite((double) 345, (double) 234, 54, 54, null, null));
 
         createAndShowGUI();
         running = true;
@@ -84,6 +84,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
     public void run() {
         System.out.println("entered run()");
+        lastUpdateTick = System.currentTimeMillis();
         while (running) {
 
             if (System.currentTimeMillis() > (lastUpdateTick + (1000 / TPS))) {
@@ -105,43 +106,52 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
         //if there are any data requests, the appropriate action will happen, for example sends away a specific sprite 
         //if a request for a specific sprite was requested
-        for (DataRequest o : requests) {
-            if (o.getData().getClass() == byte.class) {
-                byte data = (byte) o.getData();
-                if (data == 0) {
-                    output("connected! to someone!, or maby just ping?");
-                }
+        try { //I COULD sync these, but this requiers less effort
+            for (DataRequest o : requests) {
 
-                if (data == 1) {
-                    for (NetworkHandler n : networkHandlers) {
-                        if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
-                            n.sendMessage(nextIdentifier);
-                            nextIdentifier++; //So the same Identifier does not get used again
-                        }
-                    }
+                if (o.getData() instanceof Byte) {
+                    byte data = (byte) o.getData();
+                    if (data == 0) {
+                        output("connected! to someone!, or maby just ping?");
+                        requests.remove(o);
+                    } else if (data == 1) {
 
-                }
-
-            }
-            if (o.getData().getClass() == int.class) { //if a Int is recived it means a client needs a sprite with a specific Identification
-                //Then the specific sprite will be sent via networkhandler to the client that requested it
-                int data = (byte) o.getData();
-                for (Sprite u : drawables) {
-                    if (u.getIdentification() == data) {
                         for (NetworkHandler n : networkHandlers) {
-                            if (n.getNetworkID() == o.getNetworkID()) {
-                                n.sendMessage(u);
-//PHEW! this nest of if and For:s lead up to this, all of the ID's match now and the Sprite can be sent to the correct networkHandler
+                            if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
+                                nextIdentifier++; //So the same Identifier does not get used again
+                                System.out.println("Sent a ID");
+                                n.sendMessage(nextIdentifier);
+                                requests.remove(o);
+
                             }
                         }
 
                     }
+
                 }
-            }
+                if (o.getData() instanceof Integer) { //if a Int is recived it means a client needs a sprite with a specific Identification
+                    //Then the specific sprite will be sent via networkhandler to the client that requested it
+                    int data = (byte) o.getData();
+                    for (Sprite u : drawables) {
+                        if (u.getIdentification() == data) {
+                            for (NetworkHandler n : networkHandlers) {
+                                if (n.getNetworkID() == o.getNetworkID()) {
+                                    n.sendMessage(u.getData());
+//PHEW! this nest of if and For:s lead up to this, all of the ID's match now and the Sprite can be sent to the correct networkHandler
+                                    System.out.println("Sent Drawables stuff?");
+                                }
+                            }
 
-            if (o.getData().getClass() == double.class) {
+                        }
+                    }
+                }
+
+                if (o.getData().getClass() == double.class) {
+
+                }
 
             }
+        } catch (java.util.ConcurrentModificationException e) {
 
         }
         //This is the main loop for checking if something is hit by a projectile---
@@ -174,14 +184,12 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
 
         //Sends of new locationdata to clients
         if (drawables.size() > 0 & networkHandlers.size() > 0) {
-            LocationDataArray locations = new LocationDataArray();//LocationDataArray is only temporary and will be cleared after each itteration
-            //of the prorgram. The reasoning to use a LocationDataArray instead of an arraylist is because outputstreams are whiny babys
-            //and would not allow me to send an arraylist
 
             for (NetworkHandler o : networkHandlers) {
                 if (o.connected()) {//Security!
                     for (Sprite u : drawables) {//generates a new array with locations to be sent 
                         o.sendMessage(u.getLocationData().getData()); //sends a location to the clients
+
                         //This will be repeated several Times
                     }
 

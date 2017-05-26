@@ -42,7 +42,7 @@ public class ConnectionHandler implements Runnable {
             try{
             for (NetworkHandler o : networks){ //Makes sure there re no disconnected sockets in the array
             if (!o.connected()) {
-                networks.remove(o);//if there is, they get terminated! Hasta la vista, baby.
+               // networks.remove(o);//if there is, they get terminated! Hasta la vista, baby.
             }}}
             catch(ConcurrentModificationException e){//Yes, this is very ugly. If I had time I would sync the threads, but this is faster
             

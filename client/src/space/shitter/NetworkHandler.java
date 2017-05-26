@@ -88,34 +88,49 @@ public class NetworkHandler implements Runnable {
 
         while (connected) { //Main loop of networkhandler
             try {
-                System.out.println("got a message!");
+              
                 message = input.readObject();
-                if (message.getClass() == byte.class) {
-
+                if (message instanceof Byte) {
+                    
                     Program.lastByteRecived = (byte) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-                } else if (message.getClass() == double.class) {
+                } else if (message instanceof  Double) {
                     Program.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
-                } else if (message.getClass() == int.class) {
+                } else if (message instanceof  Integer) {
 
                     Program.nextIdentifier = (int) message;
+                    System.out.println("ID recived of value : " + message);
 
-                } else if (message.getClass() == String.class) { //Checks to see if the recived message is a arraylist
-                    System.out.println("got a Sprite! woo!");
+                } else if (message instanceof  String) { //Checks to see if the recived message is a arraylist
+                    
                     String[] parts = ((String) message).split(",");
-                    if (parts[0].equals("S") & parts[1].equals("LD")) {//makes sure the data string is a compatible type
-                        //S is for start, LD is for LocationData
-                        Program.lastLocationsRecived.add(new LocationData((String) message));
-                    }
-                    else if(parts[0].equals("S") & parts[1].equals("LD")){
-                    //Add a condition for Sprites Here
+                    if (parts[0].equals("S")) {//makes sure the data string is a compatible type
+                       
+                        //The following block is to sift out what kind of String it recived
+                        if (parts[1].equals("LD")) {//if the String is LocationData
+                            Program.lastLocationsRecived.add(new LocationData((String) message));
+                         
+                        } else if (parts[1].equals("S")) {//if the string is a sprite
+                            System.out.println("got a SPRITE!! woo!");
+                            Program.lastSpriteRecived = (new Sprite((String) message));
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        } else if (parts[1].equals("E")) {//if the string is a Entity
+                            Program.lastSpriteRecived = (new Entity((String) message));
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        } else if (parts[1].equals("P")) {//if the string is a Projectile
+                            Program.lastSpriteRecived = (new Projectile((String) message));
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        } else if (parts[1].equals("SS")) {//if the string is a Spaceship
+                            Program.lastSpriteRecived = (new Sprite((String) message));
+                            message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                        } else {
+                            System.out.println("The recived sting was: " + message + " And could not be read");//Error message
+                        }
                     }
 
-                } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-                    Program.lastSpriteRecived = (Sprite) message;
-                    System.out.println("Recived a sprite!");
                 } else {
-                    System.out.println("This is weird, unknown datatype");
+                    System.out.println("This is weird, unknown datatype of type: " + message.getClass() + " : " + message);
+
                 }
 
             } catch (ClassNotFoundException n) {
@@ -123,6 +138,7 @@ public class NetworkHandler implements Runnable {
             }
 
             if (Program.nextIdentifier == 0) {
+                System.out.println("Requesting new ID");
                 requestNextIdentifier(); //sends a get request to get the next Sprite identifier
                 //The reason why this if statement is here is so it's on a sepparate thread from the rest of the program since sprites freeze as they
                 //wait for a new ID to arrive. I could have made a sepparate thread for this in Program but this requiered less effort
@@ -160,7 +176,7 @@ public class NetworkHandler implements Runnable {
             output.writeObject(identifier);
             output.flush();
         } catch (IOException e) {
-            System.out.println("Could not send that message");
+            System.out.println("Could not send getrequest message");
 
         }
     }
@@ -170,7 +186,7 @@ public class NetworkHandler implements Runnable {
             output.writeObject(message);
             output.flush();
         } catch (IOException e) {
-            System.out.println("Could not send that message");
+            System.out.println("Could not send Object message");
 
         }
     }
@@ -181,7 +197,7 @@ public class NetworkHandler implements Runnable {
             output.writeObject(message);
             output.flush();
         } catch (IOException e) {
-            System.out.println("Could not send that message");
+            System.out.println("Could not send Byte message");
 
         }
 

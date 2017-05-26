@@ -19,7 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class NetworkHandler implements Runnable{ //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
+public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
     private Socket socket;
     private ObjectOutputStream output;
@@ -42,7 +42,7 @@ public class NetworkHandler implements Runnable{ //TODO fix so all clients can c
     public NetworkHandler(Socket socket, int networkID) {
 
         System.out.println("A new network handler has been created");
-        timeoutAmmount=200; 
+        timeoutAmmount = 200;
         this.networkID = networkID;
         this.socket = socket;
         running = true;
@@ -64,6 +64,7 @@ public class NetworkHandler implements Runnable{ //TODO fix so all clients can c
                     setupStreams(); //creates the sockets and connects them
                     whileConnected();//The program stays here as long as the progrm is running
                     closeStreams(); //closes all the sokets nice and easy so nothing breaks
+                    connected = false;//makes sure that the boolean is set to false and mrking it for termination in connectionhandler
                 } catch (IOException ex) {
 
                 }
@@ -87,34 +88,53 @@ public class NetworkHandler implements Runnable{ //TODO fix so all clients can c
 
                 }
                 if (message != null) {
-                    if (message.getClass() == byte.class) {
+                    if (message instanceof  Byte) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message.getClass() == int.class) {
+                    } else if (message instanceof  Integer) {
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (int) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                         System.out.println("Int recived");
-                    } else if (message.getClass() == double.class) {
+                    } else if (message instanceof  Double) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message instanceof Sprite) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
-
-                        SpaceShitterServer.newSprites.add((Sprite) message);
-                        message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                    } else if (message instanceof  String) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+                        String[] parts = ((String) message).split(",");
+                        if (parts[0].equals("S")) {//indicates that the recived string is of a correct type, S stnds for start
+                            if (parts[1].equals("S")) {//if the string is a sprite
+                                SpaceShitterServer.newSprites.add(new Sprite((String) message));
+                                message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                            }
+                            else if (parts[1].equals("E")) {//if the string is a sprite
+                                SpaceShitterServer.newSprites.add(new Entity((String) message));
+                                message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                            }
+                           else if (parts[1].equals("P")) {//if the string is a sprite
+                                SpaceShitterServer.newSprites.add(new Projectile((String) message));
+                                message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                            }
+                           else if (parts[1].equals("SS")) {//if the string is a sprite
+                                SpaceShitterServer.newSprites.add(new Sprite((String) message));
+                                message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                            }
+                           else{
+                           System.out.println("The recived sting was: "+message+" And could not be read");//Error message
+                           }
+                        }
                     }
                 }
 
             } catch (ClassNotFoundException n) {
                 System.out.println("Could not read this");
             }
-            if(timeoutCount> timeoutAmmount){
-            
-            connected = false; //breaks the loop Hence closing the streams
-            System.out.println("A client disconnected!");
+            if (timeoutCount > timeoutAmmount) {
+
+                connected = false; //breaks the loop Hence closing the streams
+                System.out.println("A client disconnected!");
             }
 
         } while (connected);
@@ -146,7 +166,7 @@ public class NetworkHandler implements Runnable{ //TODO fix so all clients can c
             sendMessage((byte) 0);
             System.out.println("Streams are setup! ready to go!");
         } catch (IOException ex) {
-            
+
             System.out.println("strems did not get setup");
         }
 
@@ -163,11 +183,10 @@ public class NetworkHandler implements Runnable{ //TODO fix so all clients can c
     public void sendMessage(Object message) { //sends a Object message to remote
         if (output != null) {
             try {
-                
+
                 output.writeObject(message);
                 output.flush();
-                
-                timeoutCount=0;
+                timeoutCount = 0;
 
             } catch (IOException e) {
                 System.out.println("Could not send that message");

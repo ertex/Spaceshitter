@@ -29,24 +29,28 @@ public class Program extends JFrame implements KeyListener, Runnable {
     private ArrayList<Sprite> drawables;
     private Thread t;
     private boolean foobar = false;
-    private ActionHandler actionHandler = new ActionHandler(); //creates the actionhandler to manage all the clicks and such
-    private NetworkHandler networkHandler = new NetworkHandler(); //creates the Networkhandler to be able to send messages to remote
+    private ActionHandler actionHandler; //creates the actionhandler to manage all the clicks and such
+    private NetworkHandler networkHandler; //creates the Networkhandler to be able to send messages to remote
 
     public Program() { //Doubles as a Init() since it's called from the main class on startup
-    
+
         t = new Thread(this, "Main");
         xSize = 600;
         ySize = 600;
         createAndShowGUI();
+        lastLocationsRecived = new ArrayList();
         drawables = new ArrayList();
-        //FIX------- Identification nimber for sapceship
-        LocalPlayer = new SpaceShip( 20, 20, 50, 50, 20, null, true); //Creates the Local player, this will be controlled by keystorkes from the local machine
-        //REMOVE LOCAL PLAYER FROM HERE IN FINAL VERSION!!!--------------------------------------------
+        actionHandler = new ActionHandler();
+        networkHandler = new NetworkHandler();
+        System.out.println("before local player");
+        LocalPlayer = new SpaceShip(20, 20, 50, 50, 20, null, true, null); //Creates the Local player, this will be controlled by keystorkes from the local machine
+System.out.println("after local player");
         drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
 
         paintComponents();
-
+        System.out.println("before t");
         t.start();
+        System.out.println("after t");
     }
 
     public void createAndShowGUI() {
@@ -69,6 +73,33 @@ public class Program extends JFrame implements KeyListener, Runnable {
         System.out.println("GUI created");
     }
 
+    @Override
+    public void run() {
+        System.out.println("entered run()");
+        while (true) {
+
+            if (lastSpriteRecived != null) { //checks and adds strings to drawables if one has been recived
+                drawables.add(lastSpriteRecived);
+                lastSpriteRecived = null;
+            }
+
+            if (networkHandler.connected() & lastLocationsRecived.size() > 0) {
+                System.out.println("DO STUFF PLS!");
+                updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables and also sends a request to the remote server to send it to client
+                lastLocationsRecived.clear();
+            }
+            paintComponents();
+            //  System.out.println("running");
+            try {
+
+                Thread.sleep(30);
+
+            } catch (InterruptedException io) {
+            }
+
+        }
+    }
+
     public void paintComponents() {
         g = (Graphics2D) bs.getDrawGraphics();
         g.clearRect(0, 0, xSize, ySize); //clears the canvas
@@ -80,32 +111,6 @@ public class Program extends JFrame implements KeyListener, Runnable {
         }
         if (!bs.contentsLost()) {
             bs.show();
-        }
-    }
-
-    public void updateLocations(ArrayList inNewLocations, ArrayList inOldLocations) {//Updates the location of sprites, FIND BETTER NAMES FOR THESE
-
-        ArrayList<LocationData> newLocations = inNewLocations;
-        ArrayList<Sprite> oldLocations = inOldLocations;
-
-        for (LocationData o : newLocations) {
-            int ident = o.getIdentifier();
-
-            for (Sprite u : oldLocations) {
-                if (u.getIdentification() == ident) { //Checks to see if the identifier of the location data is the same as the identifier of the sprite
-                    u.setLocation(o); //updates the location of the sprites
-                    oldLocations.remove(o); //removes a object from the locations so it wont be itterated though again.
-                    break;
-                }
-            }
-
-        }
-        while (oldLocations.size() > 0) {
-
-            networkHandler.sendGetRequest(oldLocations.get(0).getIdentification()); //This should not really (naming convention and all) be here but it makes it simpler to code
-            //Finds a missing Sprite/entity and sends off a request to fetch it from the server
-            oldLocations.remove(0);
-
         }
     }
 
@@ -125,7 +130,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
 
             for (Projectile o : (ArrayList<Projectile>) LocalPlayer.fetchProjectileBuffer()) {
 //Itterates though and sends the Projectiles to the server so it does not have to send them back later though a get request
-                networkHandler.sendObjectMessage(o);
+                networkHandler.sendObjectMessage(o.getData());
             }
 
             LocalPlayer.clearProjectileBuffer();
@@ -138,28 +143,27 @@ public class Program extends JFrame implements KeyListener, Runnable {
     public void keyReleased(KeyEvent e) {
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            
-           
-            
-            if (lastSpriteRecived != null) {
-                drawables.add(lastSpriteRecived);
-                lastSpriteRecived = null;
+    public void updateLocations(ArrayList inNewLocations, ArrayList inOldLocations) {//Updates the location of sprites, FIND BETTER NAMES FOR THESE
+
+        ArrayList<LocationData> newLocations = inNewLocations;
+        ArrayList<Sprite> oldLocations = inOldLocations;
+
+        for (LocationData o : newLocations) {
+            int ident = o.getIdentifier();
+
+            int i = 0;
+            while (oldLocations.get(i).getIdentification() != ident | i > oldLocations.size() - 1) {
+                i++;
+                System.out.println("well, it's looping");
             }
-
-            if (networkHandler.connected() & lastLocationsRecived != null) {
-                updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables and also sends a request to the remote server to send it to client
-                lastLocationsRecived = null;
-            }
-            paintComponents();
-            //  System.out.println("running");
-            try {
-
-                Thread.sleep(30);
-
-            } catch (InterruptedException io) {
+            Sprite u = oldLocations.get(i);
+            if (u.getIdentification() == ident) {
+                u.setLocation(o);
+                System.out.println("a location found its home");
+            } else if (i > oldLocations.size() - 1) {
+                System.out.println("Hmm better sen a get request");
+                networkHandler.sendGetRequest(oldLocations.get(0).getIdentification());
+                //Finds a missing Sprite/entity and sends off a request to fetch it from the server
             }
 
         }

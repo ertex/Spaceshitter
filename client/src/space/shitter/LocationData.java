@@ -12,7 +12,7 @@ public class LocationData {
         this.x = x;                                             //it is used to transfer the location of a entity
         this.y = y;
         this.identifier = identifier;
-        data = "S,LD" + x + "," + y + "," + identifier;//This is the sring that will be sent over the internet to remote
+        data = "S,LD," + x + "," + y + "," + identifier;//This is the sring that will be sent over the internet to remote
         //The reasoning for this approach contruary to just sending LocationDataArray is that I had trouble
         //with reciving the Objects, also reciving primitive objects are less vurnble in compatability errors
         //although not as safe since a fake LocationData can be sent very easily
@@ -29,13 +29,11 @@ public class LocationData {
                 y = (Double.parseDouble(parts[3]));
                 identifier = (int) Float.parseFloat(parts[4]);
             } catch (NumberFormatException e) {
-
+                System.out.println("LD did not parse");
             }
         }
 
     }
-
-
 
     public double getX() {
         return x;
