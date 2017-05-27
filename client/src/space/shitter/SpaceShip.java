@@ -12,7 +12,7 @@ public class SpaceShip extends Entity {
     public SpaceShip(int x, int y, int width, int height, int speed, BufferedImage img, boolean localPlayer, String imgURL) {
         super(x, y, width, height, speed, img, true, true, imgURL);
         projectileBuffer = new ArrayList();
-         data = "S" + "SS," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
+         data = "S," + "SS," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
 
     }
 

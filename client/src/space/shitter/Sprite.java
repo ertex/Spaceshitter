@@ -17,10 +17,16 @@ public class Sprite {
     protected String data, imgURL;
 
     public Sprite(double x, double y, int width, int height, BufferedImage img, String imgURL) {
-        while (Program.nextIdentifier == 0) {
+        while (Program.nextIdentifier == 0) { //This might freeze the progression of the entire program at some points, Multi threading
+            // would be usefull here so it does not stop the entire program.
+            
             //This while loop is just to hold the program still for a while until a new nextIdentifier has arrived
-           int i = 0;//This is usefull somehow? well for somereason it wont work without something occuping it
-           i++;
+            
+          
+           System.out.print("");
+           //This is usefull somehow? well for somereason it wont work without something occuping it
+           //So for SOME REASON this is a crurial part of the program
+           
         }
         this.imgURL = imgURL;
         identifier = Program.nextIdentifier; //This simlyfies the way Sprites are created since it requiers less effort in code in other places
@@ -44,7 +50,7 @@ public class Sprite {
                 System.out.println(" Error Default Image not found!!");
             }
         }
-        data = "S" + "S," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
+        data = "S," + "S," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
     }
 
     public Sprite(String data) {//A Sprite created from a string of data, probobly from a InputStream

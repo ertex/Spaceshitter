@@ -1,23 +1,9 @@
 package spaceshitter.server;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 public class NetworkHandler implements Runnable { //TODO fix so all clients can connect on demand,infinite connections, no packet losses from overwritten messages
 
@@ -31,8 +17,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
     private Thread t;
     private boolean running, connected;
 
-    private long pingSent, pingRecived; //this is used to get the ping to remote
-    private int pingTime; //the current pingTime
     private int foobar = 0;//This is used in pingRemote, you might want to look the other way?
     private int networkID; //The uniqe ID for this network handler. this is here so get requests(made by sending a DataRequest to Server.requests) 
     private int timeoutAmmount; //How many Cocurrent IOExceptions can be made before the sockets termintes, this is so there are no unneccesarry sockets open.
@@ -88,42 +72,38 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
                 }
                 if (message != null) {
-                    if (message instanceof  Byte) {
+                    if (message instanceof Byte) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (byte) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message instanceof  Integer) {
+                    } else if (message instanceof Integer) {
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (int) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-                        System.out.println("Int recived");
-                    } else if (message instanceof  Double) {
+                     
+                    } else if (message instanceof Double) {
 
                         SpaceShitterServer.requests.add(new DataRequest(networkID, (double) message)); //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
                         message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
 
-                    } else if (message instanceof  String) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
+                    } else if (message instanceof String) { //Checks to see if it is a lone object that extends Sprite, if so it will be put into the local Drawables array
                         String[] parts = ((String) message).split(",");
                         if (parts[0].equals("S")) {//indicates that the recived string is of a correct type, S stnds for start
                             if (parts[1].equals("S")) {//if the string is a sprite
                                 SpaceShitterServer.newSprites.add(new Sprite((String) message));
                                 message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-                            }
-                            else if (parts[1].equals("E")) {//if the string is a sprite
+                            } else if (parts[1].equals("E")) {//if the string is a sprite
                                 SpaceShitterServer.newSprites.add(new Entity((String) message));
                                 message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-                            }
-                           else if (parts[1].equals("P")) {//if the string is a sprite
+                            } else if (parts[1].equals("P")) {//if the string is a sprite
                                 SpaceShitterServer.newSprites.add(new Projectile((String) message));
                                 message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
-                            }
-                           else if (parts[1].equals("SS")) {//if the string is a sprite
+                            } else if (parts[1].equals("SS")) {//if the string is a sprite
                                 SpaceShitterServer.newSprites.add(new Sprite((String) message));
                                 message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
+                            } else {
+                                System.out.println("The recived sting was: " + message + " And could not be read");//Error message
                             }
-                           else{
-                           System.out.println("The recived sting was: "+message+" And could not be read");//Error message
-                           }
                         }
                     }
                 }
@@ -139,20 +119,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
         } while (connected);
 
-    }
-
-    public void pingRemote() {//sends a mesge that bounces on remote as "43" nd time gets recorded, see Program.run() "case 42" & "case 43"
-        if (connected) {//won't ping unless remote is connected
-            foobar++;
-            if (foobar >= 120) {//this is a way that makes it only ping every 60 ittertions, hence not drawing stupid ammounts of power
-                foobar = 0;
-                //this solotion is horrible, if I forget to ask you how to do this in  different way, take contact
-                pingTime = (int) (pingRecived - pingSent);//this calculates the ping by taking the diference in time between reciving and sending a message
-                //this means it lags behind by one tick, but that is close enogh
-                sendMessage((byte) 0);//sends the ping
-                pingSent = System.currentTimeMillis(); //saves the time it was sent
-            }
-        }
     }
 
     public void setupStreams() {
@@ -200,14 +166,6 @@ public class NetworkHandler implements Runnable { //TODO fix so all clients can 
 
     public boolean connected() {
         return connected;
-    }
-
-    public int getPingTime() {
-        return pingTime;
-    }
-
-    public void setPingRecived(long time) {
-        pingRecived = time;
     }
 
     public int getNetworkID() {

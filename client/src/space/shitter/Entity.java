@@ -17,7 +17,7 @@ public class Entity extends Sprite {
         if (collideable) {
             rect = new Rectangle((int) x, (int) y, width, height);
         }
-        data = "S" + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
+        data = "S," + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
     }
 
     public Entity(double x, double y, int width, int height, int speed, BufferedImage img, boolean moveable, boolean collideable, String imgURL) {//controllable Entity
@@ -28,7 +28,7 @@ public class Entity extends Sprite {
         if (collideable) {
             rect = new Rectangle((int) x, (int) y, width, height);
         }
-        data = "S" + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
+        data = "S," + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
     }
 
     public Entity(double x, double y, int width, int height, BufferedImage img, String imgURL) {//Projectile entity
@@ -38,7 +38,7 @@ public class Entity extends Sprite {
         this.speed = speed;
         rect = new Rectangle((int) x, (int) y, width, height);
 
-        data = "S" + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
+        data = "S," + "E," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + moveable + "," + collideable + "," + speed;
     }
 
     public Entity(String data) {

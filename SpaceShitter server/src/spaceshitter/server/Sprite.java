@@ -43,7 +43,7 @@ public class Sprite {
                 System.out.println(" Error Default Image not found!!");
             }
         }
-        data = "S" + "S," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
+        data = "S," + "S," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + identifier;
     }
 
     public Sprite(String data) {//A Sprite created from a string of data, probobly from a InputStream

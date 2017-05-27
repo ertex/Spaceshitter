@@ -23,7 +23,7 @@ public class Projectile extends Entity {
             super.img = null;
         }
 
-        data = "S" + "P," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + "True" + "," + "True" + "," + speed + "," + direction.getX() + "," + direction.getY();
+        data = "S," + "P," + x + "," + y + "," + width + "," + height + "," + imgURL + "," + super.getIdentification() + "," + "True" + "," + "True" + "," + speed + "," + direction.getX() + "," + direction.getY();
 
     }
 

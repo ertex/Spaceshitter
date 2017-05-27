@@ -1,21 +1,13 @@
 package space.shitter;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import java.util.ArrayList;
+
 
 public class NetworkHandler implements Runnable {
 
@@ -88,36 +80,38 @@ public class NetworkHandler implements Runnable {
 
         while (connected) { //Main loop of networkhandler
             try {
-              
+
                 message = input.readObject();
                 if (message instanceof Byte) {
-                    
+
                     Program.lastByteRecived = (byte) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
-                } else if (message instanceof  Double) {
+                } else if (message instanceof Double) {
                     Program.lastDoubleRecived = (double) message; //saves the last recived message/input in a static variable, this might not be the safest approach but it works for this application
 
-                } else if (message instanceof  Integer) {
+                } else if (message instanceof Integer) {
 
                     Program.nextIdentifier = (int) message;
-                    System.out.println("ID recived of value : " + message);
+                  
 
-                } else if (message instanceof  String) { //Checks to see if the recived message is a arraylist
-                    
+                } else if (message instanceof String) { //Checks to see if the recived message is a arraylist
+
                     String[] parts = ((String) message).split(",");
                     if (parts[0].equals("S")) {//makes sure the data string is a compatible type
-                       
+
                         //The following block is to sift out what kind of String it recived
                         if (parts[1].equals("LD")) {//if the String is LocationData
                             Program.lastLocationsRecived.add(new LocationData((String) message));
-                         
+
                         } else if (parts[1].equals("S")) {//if the string is a sprite
-                            System.out.println("got a SPRITE!! woo!");
+                           
                             Program.lastSpriteRecived = (new Sprite((String) message));
                             message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                         } else if (parts[1].equals("E")) {//if the string is a Entity
                             Program.lastSpriteRecived = (new Entity((String) message));
+                          
                             message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                         } else if (parts[1].equals("P")) {//if the string is a Projectile
+                           
                             Program.lastSpriteRecived = (new Projectile((String) message));
                             message = null; //makes message null, this is to minimize packetloss by not overwriting any packets
                         } else if (parts[1].equals("SS")) {//if the string is a Spaceship
@@ -148,19 +142,6 @@ public class NetworkHandler implements Runnable {
 
     }
 
-    public void pingRemote() {//sends a mesge that bounces on remote as "43" nd time gets recorded, see Program.run() "case 42" & "case 43"
-        if (connected) {//won't ping unless remote is connected
-            foobar++;
-            if (foobar >= 120) {//this is a way that makes it only ping every 60 ittertions, hence not drawing stupid ammounts of power
-                foobar = 0;
-                //this solotion is horrible, if I forget to ask you how to do this in  different way, take contact
-                pingTime = (int) (pingRecived - pingSent);//this calculates the ping by taking the diference in time between reciving and sending a message
-                //this means it lags behind by one tick, but that is close enogh
-                sendByteMessage((byte) 0);//sends the ping
-                pingSent = System.currentTimeMillis(); //saves the time it was sent
-            }
-        }
-    }
 
     public void closeStreams() throws IOException { //yep, this turns of the streams, seems like it's a good thing to do
 
@@ -238,13 +219,6 @@ public class NetworkHandler implements Runnable {
         return connected;
     }
 
-    public int getPingTime() {
-        return pingTime;
 
-    }
-
-    public void setPingRecived(long time) {
-        pingRecived = time;
-    }
 
 }

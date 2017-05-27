@@ -4,11 +4,8 @@ package spaceshitter.server;
 import java.awt.Canvas;
 import java.awt.Color;
 import static java.awt.Component.LEFT_ALIGNMENT;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -34,7 +31,7 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
     //newSprites is here to act as a buffer for when newly created sprites is sent over from a client before they get added to the main "drawables" ArrayList
 
     private boolean running;
-    private Canvas canvas;
+
     private final int xSize = 400;
     private final int ySize = 400;
     private ArrayList<JTextField> outputList = new ArrayList();
@@ -74,7 +71,9 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
         drawables = new ArrayList(); //This arraylist contains almost everything that is of importance and will be able to be drawn
         nextIdentifier = 1;
         drawables.add(new Sprite((double) 345, (double) 234, 54, 54, null, null));
-
+nextIdentifier = 1;
+        
+        drawables.add(new Sprite((double) 35, (double) 234, 54, 54, null, null));
         createAndShowGUI();
         running = true;
         output("asdasd");
@@ -131,14 +130,15 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                 }
                 if (o.getData() instanceof Integer) { //if a Int is recived it means a client needs a sprite with a specific Identification
                     //Then the specific sprite will be sent via networkhandler to the client that requested it
-                    int data = (byte) o.getData();
+                    int ident = (int) o.getData();
                     for (Sprite u : drawables) {
-                        if (u.getIdentification() == data) {
+                        if (u.getIdentification() == ident) {
                             for (NetworkHandler n : networkHandlers) {
-                                if (n.getNetworkID() == o.getNetworkID()) {
+                                if (n.getNetworkID() == o.getNetworkID()) { //Makes sure it gets returned to the correct NetworkHandler
                                     n.sendMessage(u.getData());
 //PHEW! this nest of if and For:s lead up to this, all of the ID's match now and the Sprite can be sent to the correct networkHandler
-                                    System.out.println("Sent Drawables stuff?");
+                                    System.out.println("Sent Drawables stuff with id :" + u.getIdentification()+" and data :"+u.getData());
+                                    requests.remove(o);
                                 }
                             }
 
@@ -146,8 +146,8 @@ public class SpaceShitterServer { //TODO fix so SpaceShitterServer does all of t
                     }
                 }
 
-                if (o.getData().getClass() == double.class) {
-
+                if (o.getData() instanceof Double) {
+                    requests.remove(o);
                 }
 
             }

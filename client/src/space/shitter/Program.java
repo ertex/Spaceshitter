@@ -28,7 +28,7 @@ public class Program extends JFrame implements KeyListener, Runnable {
     private SpaceShip LocalPlayer;
     private ArrayList<Sprite> drawables;
     private Thread t;
-    private boolean foobar = false;
+
     private ActionHandler actionHandler; //creates the actionhandler to manage all the clicks and such
     private NetworkHandler networkHandler; //creates the Networkhandler to be able to send messages to remote
 
@@ -42,15 +42,11 @@ public class Program extends JFrame implements KeyListener, Runnable {
         drawables = new ArrayList();
         actionHandler = new ActionHandler();
         networkHandler = new NetworkHandler();
-        System.out.println("before local player");
-        LocalPlayer = new SpaceShip(20, 20, 50, 50, 20, null, true, null); //Creates the Local player, this will be controlled by keystorkes from the local machine
-System.out.println("after local player");
-        drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
-
         paintComponents();
-        System.out.println("before t");
+       // LocalPlayer = new SpaceShip(60, 20, 50, 50, 20, null, true, null); //Creates the Local player, this will be controlled by keystorkes from the local machine
+      //  drawables.add(LocalPlayer);//adds LocalPlayer in the drawable arraylist, so it will be drawn
         t.start();
-        System.out.println("after t");
+
     }
 
     public void createAndShowGUI() {
@@ -84,7 +80,6 @@ System.out.println("after local player");
             }
 
             if (networkHandler.connected() & lastLocationsRecived.size() > 0) {
-                System.out.println("DO STUFF PLS!");
                 updateLocations(lastLocationsRecived, drawables); //updates the locations of all the sprites in drawables and also sends a request to the remote server to send it to client
                 lastLocationsRecived.clear();
             }
@@ -103,9 +98,9 @@ System.out.println("after local player");
     public void paintComponents() {
         g = (Graphics2D) bs.getDrawGraphics();
         g.clearRect(0, 0, xSize, ySize); //clears the canvas
-        if (foobar) {
+        
             g.fillRect(20, 20, 50, 50);
-        }
+        
         for (Sprite o : drawables) {//draws all the drawable things
             o.draw(g);
         }
@@ -145,27 +140,46 @@ System.out.println("after local player");
 
     public void updateLocations(ArrayList inNewLocations, ArrayList inOldLocations) {//Updates the location of sprites, FIND BETTER NAMES FOR THESE
 
-        ArrayList<LocationData> newLocations = inNewLocations;
+        ArrayList<LocationData> newLocations = inNewLocations;//saves the arraylists locally
         ArrayList<Sprite> oldLocations = inOldLocations;
 
+        outerLoop:
         for (LocationData o : newLocations) {
             int ident = o.getIdentifier();
 
             int i = 0;
-            while (oldLocations.get(i).getIdentification() != ident | i > oldLocations.size() - 1) {
-                i++;
-                System.out.println("well, it's looping");
-            }
-            Sprite u = oldLocations.get(i);
-            if (u.getIdentification() == ident) {
-                u.setLocation(o);
-                System.out.println("a location found its home");
-            } else if (i > oldLocations.size() - 1) {
-                System.out.println("Hmm better sen a get request");
-                networkHandler.sendGetRequest(oldLocations.get(0).getIdentification());
-                //Finds a missing Sprite/entity and sends off a request to fetch it from the server
-            }
+            for (Sprite u : oldLocations) {
 
+                if (u.getIdentification() == ident) {
+                    u.setLocation(o);
+                    continue outerLoop;
+
+                }
+            }
+            //This statement is unreachble s long as there is a matching pair of identification ints in  new/old location
+            //hence the continue statement. it will instead of when the lower for loop is done go down here, it will redirect 
+            //to the outerLoop and continue from there
+            System.out.println("Hmm better send a get requestfor ID :" + o.getIdentifier());
+            networkHandler.sendGetRequest(o.getIdentifier());
+            //sends off a request to fetch it from the server
+
+            pruneDrawables();
+            //makes sure there are no copies in drawables that slow own the program
+        }
+    }
+
+    public void pruneDrawables() {//Removes objects that have the same id so only one remains
+        try {
+            for (Sprite o : drawables) {
+                int ident = o.getIdentification();
+                for (Sprite u : drawables) {
+                    if (u.getIdentification() == ident) {
+                        drawables.remove(u);
+
+                    }
+                }
+            }
+        } catch (java.util.ConcurrentModificationException e) {
         }
     }
 
